@@ -68,6 +68,9 @@
   //  - EXTRA items added to this job only: name, unit, cost and markup %
   //    are entered here (price = cost + markup), with a button to save the
   //    item to the Price List, after which it becomes a price list line.
+  // Every line has an editable description for extra info on this job:
+  // Price List lines keep it in "note" (the Price List description shows
+  // as the placeholder and is used on the quote when no note is typed).
   // Extra lines store their cost in both "cost" and "price" and the markup
   // in "markup", so the shared quote maths (qty x price x (1 + markup%))
   // gives the marked-up price.
@@ -154,7 +157,7 @@
       } else if (linked) {
         html += '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
           '<td>' + itemSelect(l, false) + '</td>' +
-          '<td class="muted">' + Q.esc(l.description) + '</td>' +
+          '<td>' + textInput("materials", l, "note", l.description || "Extra info (optional)") + '</td>' +
           '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
           '<td class="col-unit">' + Q.esc(l.unit) + '</td>' +
           '<td class="col-money"></td><td class="col-pct"></td>' +

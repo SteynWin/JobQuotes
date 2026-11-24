@@ -44,7 +44,7 @@
     mats.forEach(function (l) {
       var key = l.category || "Other";
       if (!byCat[key]) { byCat[key] = { name: key, rows: [] }; sections.push(byCat[key]); }
-      byCat[key].rows.push({ name: l.name, desc: l.description, qty: l.qty, unit: l.unit,
+      byCat[key].rows.push({ name: l.name, desc: l.note || l.description, qty: l.qty, unit: l.unit,
         unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k });
     });
     var lab = (job.labour || []).filter(function (l) { return Q.num(l.qty) !== 0; });
