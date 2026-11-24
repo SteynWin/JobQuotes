@@ -330,7 +330,7 @@
       balance: round2(total - deposit),
       cost: round2(cost), profit: round2(subtotal - cost),
       profitPct: subtotal ? (subtotal - cost) / subtotal * 100 : 0,
-      actual: round2(actual), actualProfit: round2(subtotal - actual)
+      actual: round2(actual), actualProfit: round2(subtotal - cost - actual)
     };
   }
 

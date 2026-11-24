@@ -35,7 +35,7 @@
       tile("Jobs", jobs.length, quotedCount + " quoted") +
       tile("Open quotes", Q.money(openValue), open + " draft/quoted") +
       tile("Won work", Q.money(won), "Est. profit " + Q.money(wonProfit)) +
-      tile("Costs logged", Q.money(spent), "across all jobs");
+      tile("Extra costs & variations", Q.money(spent), "across all jobs");
 
     var shown = jobs.filter(function (j) {
       if (sf === "open" && (j.status === "Completed" || j.status === "Lost")) return false;

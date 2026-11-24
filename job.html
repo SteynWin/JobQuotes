@@ -144,10 +144,10 @@
 
       <section class="card">
         <div class="toolbar">
-          <h2 class="card-title">Actual costs (spent)</h2>
-          <span class="section-total">Spent <strong id="expTotal">$0.00</strong> of <span id="expBudget">$0.00</span> estimated</span>
+          <h2 class="card-title">Extra costs and variations</h2>
+          <span class="section-total">Total <strong id="expTotal">$0.00</strong> <span class="muted">(estimated job cost <span id="expBudget">$0.00</span>)</span></span>
         </div>
-        <p class="hint">Log supplier invoices and wages as the job runs, to see how actual costs compare with the estimate. Not shown on the quote.</p>
+        <p class="hint">Log extra costs and variations as the job runs (supplier invoices, extra wages, changes on site) to see how they affect your profit. Not shown on the quote.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -163,7 +163,7 @@
           </table>
         </div>
         <div class="add-row">
-          <button type="button" class="small-btn" id="expAddBtn">+ Add cost</button>
+          <button type="button" class="small-btn" id="expAddBtn">+ Add extra cost</button>
         </div>
       </section>
     </div>
@@ -188,7 +188,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=6"></script>
-<script src="job.js?v=10"></script>
+<script src="common.js?v=7"></script>
+<script src="job.js?v=11"></script>
 </body>
 </html>

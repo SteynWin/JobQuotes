@@ -17,13 +17,13 @@ The access code is **3622**. To change it, edit `ACCESS_CODE` in `access-gate.js
 ## Pages
 
 - **Jobs**: every job with its status (Draft → Quoted → Accepted → In Progress
-  → Completed / Lost), quote total, estimated cost and profit, and amount spent so far.
+  → Completed / Lost), quote total, estimated cost and profit, and extra costs and variations.
 - **Job**: quantities of materials and hardware grouped by category, labour
   hours (Labour / Machining / Assembly / Installation, plus Cutters per job) and add-ons (Design,
   Delivery…). The summary works out items total → margin % → subtotal → GST →
   total → deposit / balance, the same structure as Mozaik's pricing template,
-  plus estimated cost and profit. Log supplier invoices and wages under
-  **Actual costs** to compare them with the estimate.
+  plus estimated cost and profit. Log supplier invoices, extra wages and
+  site changes under **Extra costs and variations** to see their effect on profit.
 - **Quote**: a printable client quote, also downloadable as a PDF. You choose
   what the client sees: every item, quantities only, category totals, or just
   the total. The margin can be spread into the prices or shown as its own line.

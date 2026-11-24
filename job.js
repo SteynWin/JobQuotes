@@ -288,7 +288,7 @@
         '<td><select data-list="expenses" data-id="' + Q.esc(x.id) + '" data-f="type">' +
           EXPENSE_TYPES.map(function (t) { return '<option' + (t === x.type ? " selected" : "") + '>' + Q.esc(t) + '</option>'; }).join("") +
         '</select></td>' +
-        '<td>' + textInput("expenses", x, "description", "e.g. Polytec invoice #1234") + '</td>' +
+        '<td>' + textInput("expenses", x, "description", "e.g. Extra benchtop cut-out") + '</td>' +
         '<td class="num col-total">' + moneyInput("expenses", x, "amount") + '</td>' +
         '<td class="col-del"><button type="button" class="icon-btn" data-del="expenses" data-id="' + Q.esc(x.id) + '" title="Remove">&times;</button></td>' +
         '</tr>';
@@ -337,8 +337,8 @@
       '<tr class="sep"><td colspan="2"></td></tr>' +
       '<tr><td class="muted">Est. cost</td><td id="s_cost" class="muted"></td></tr>' +
       '<tr class="strong"><td>Est. profit</td><td id="s_profit"></td></tr>' +
-      '<tr><td class="muted">Spent so far</td><td id="s_actual" class="muted"></td></tr>' +
-      '<tr><td class="muted">Profit after spend</td><td id="s_actprofit"></td></tr>';
+      '<tr><td class="muted">Extra costs &amp; variations</td><td id="s_actual" class="muted"></td></tr>' +
+      '<tr><td class="muted">Profit after extras</td><td id="s_actprofit"></td></tr>';
     function row(label, id) { return '<tr><td>' + label + '</td><td id="' + id + '"></td></tr>'; }
     document.querySelectorAll("[data-pct]").forEach(function (el) { el.value = job[el.getAttribute("data-pct")]; });
   }
