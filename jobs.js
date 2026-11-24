@@ -21,21 +21,22 @@
     jobs.sort(function (a, b) { return (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0); });
 
     // Tiles: whole pipeline, regardless of filter.
-    var open = 0, openValue = 0, won = 0, wonProfit = 0, spent = 0, quotedCount = 0;
+    var open = 0, openValue = 0, won = 0, wonProfit = 0, quotedCount = 0;
+    var prog = 0, progValue = 0, progProfit = 0;
     jobs.forEach(function (j) {
       var c = Q.calcJob(j);
       if (j.status === "Draft" || j.status === "Quoted") { open++; openValue += c.total; }
       if (j.status === "Accepted" || j.status === "In Progress" || j.status === "Completed") {
         won += c.total; wonProfit += c.profit;
       }
+      if (j.status === "In Progress") { prog++; progValue += c.total; progProfit += c.actualProfit; }
       if (j.status !== "Draft") quotedCount++;
-      spent += c.actual;
     });
     tiles.innerHTML =
       tile("Jobs", jobs.length, quotedCount + " quoted") +
       tile("Open quotes", Q.money(openValue), open + " draft/quoted") +
       tile("Won work", Q.money(won), "Est. profit " + Q.money(wonProfit)) +
-      tile("Extra costs & variations", Q.money(spent), "across all jobs");
+      tile("In progress", Q.money(progValue), prog + (prog === 1 ? " job" : " jobs") + " · est. profit " + Q.money(progProfit));
 
     var shown = jobs.filter(function (j) {
       if (sf === "open" && (j.status === "Completed" || j.status === "Lost")) return false;
