@@ -112,12 +112,16 @@
           return !l.rateId && String(l.name).trim().toLowerCase() === String(r.name).trim().toLowerCase();
         });
       if (!line) {
-        line = { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs", qty: 0, cost: 0, price: 0, markup: 0 };
+        // Cutters is charged once per job, so new jobs start at 1 - unless
+        // the job already charges Cutters as an add-on (older jobs).
+        var flat = Q.fixedLabourKey(r) === "cutters" &&
+          !job.addOns.some(function (a) { return /^cutter/i.test(String(a.name || "").trim()) && Q.num(a.amount); });
+        line = { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs", qty: flat ? 1 : 0, cost: 0, price: 0, markup: 0 };
         job.labour.push(line);
       }
       line.rateId = r.id;
       if (!FROZEN[job.status]) {
-        line.name = r.name; line.price = Q.num(r.rate); line.cost = Q.num(r.cost); line.markup = 0;
+        line.name = r.name; line.unit = r.unit || "Hrs"; line.price = Q.num(r.rate); line.cost = Q.num(r.cost); line.markup = 0;
       }
     });
     var order = standard.map(function (r) { return r.id; });
@@ -143,7 +147,9 @@
     tbody.innerHTML = job.labour.map(function (l) {
       var std = isStandard(l);
       return '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
-        '<td>' + (std ? '<strong>' + Q.esc(l.name) + '</strong>' : textInput("labour", l, "name", "e.g. Sanding")) + '</td>' +
+        '<td>' + (std ? '<strong>' + Q.esc(l.name) + '</strong>' +
+          (/^(hrs?|hours?)$/i.test(l.unit || "Hrs") ? "" : ' <span class="muted">(per ' + Q.esc(String(l.unit).toLowerCase()) + ')</span>')
+          : textInput("labour", l, "name", "e.g. Sanding")) + '</td>' +
         '<td class="num col-qty">' + moneyInput("labour", l, "qty") + '</td>' +
         '<td class="num col-money">' + (std ? Q.money(l.price) : moneyInput("labour", l, "price")) + '</td>' +
         '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +

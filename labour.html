@@ -41,15 +41,15 @@
 
   <section class="card">
     <div class="toolbar"><h2 class="card-title">Labour Rates</h2></div>
-    <p class="hint"><strong>Cost / hr</strong> is what the work costs you (wages and on-costs). <strong>Rate / hr</strong> is what you charge the client. The four standard types (🔒) appear on every job at these rates. Any other types you add here, such as Sanding or Cleaning, are shortcuts in the <em>+ Add other labour</em> list on a job.</p>
+    <p class="hint"><strong>Cost</strong> is what the work costs you (wages and on-costs). <strong>Rate</strong> is what you charge the client, per hour (or per job for Cutters). The standard types (🔒) appear on every job at these rates. Any other types you add here, such as Sanding or Cleaning, are shortcuts in the <em>+ Add other labour</em> list on a job.</p>
     <div class="table-scroll">
       <table class="q-table">
         <thead>
           <tr>
             <th>Labour type</th>
             <th class="col-unit">Unit</th>
-            <th class="num col-money">Cost / hr</th>
-            <th class="num col-money">Rate / hr</th>
+            <th class="num col-money">Cost</th>
+            <th class="num col-money">Rate</th>
             <th class="num col-pct">Margin</th>
             <th class="col-del"></th>
           </tr>
@@ -62,7 +62,7 @@
 
   <section class="card">
     <div class="toolbar"><h2 class="card-title">Add-on presets</h2></div>
-    <p class="hint">Quick fixed charges you can add to a job, such as Design, Cutters and Delivery.</p>
+    <p class="hint">Quick fixed charges you can add to a job, such as Design and Delivery.</p>
     <div class="table-scroll">
       <table class="q-table">
         <thead><tr><th>Add-on</th><th class="num col-money">Default charge</th><th class="col-del"></th></tr></thead>
@@ -80,7 +80,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=3"></script>
+<script src="common.js?v=4"></script>
 <script src="labour.js?v=3"></script>
 </body>
 </html>

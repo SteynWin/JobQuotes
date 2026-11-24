@@ -19,7 +19,7 @@ The access code is **3622**. To change it, edit `ACCESS_CODE` in `access-gate.js
 - **Jobs**: every job with its status (Draft → Quoted → Accepted → In Progress
   → Completed / Lost), quote total, estimated cost and profit, and amount spent so far.
 - **Job**: quantities of materials and hardware grouped by category, labour
-  hours (Labour / Machining / Part Labour) and add-ons (Design, Cutters,
+  hours (Labour / Machining / Assembly / Installation, plus Cutters per job) and add-ons (Design,
   Delivery…). The summary works out items total → margin % → subtotal → GST →
   total → deposit / balance, the same structure as Mozaik's pricing template,
   plus estimated cost and profit. Log supplier invoices and wages under

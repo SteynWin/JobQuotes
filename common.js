@@ -65,12 +65,12 @@
         { id: "fixed-machining", name: "Machining", unit: "Hrs", rate: 80, cost: 40 },
         { id: "fixed-assembly", name: "Assembly Labour", unit: "Hrs", rate: 160, cost: 60 },
         { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 },
+        { id: "fixed-cutters", name: "Cutters", unit: "Job", rate: 80, cost: 80 },
         { id: uid(), name: "Sanding", unit: "Hrs", rate: 90, cost: 45 },
         { id: uid(), name: "Cleaning", unit: "Hrs", rate: 70, cost: 35 }
       ],
       addOnPresets: [
         { id: uid(), name: "Design", amount: 200 },
-        { id: uid(), name: "Cutters", amount: 80 },
         { id: uid(), name: "Delivery", amount: 100 },
         { id: uid(), name: "Install", amount: 0 }
       ],
@@ -97,7 +97,9 @@
     { key: "labour", re: /^(labour|labor)$/i, def: { id: "fixed-labour", name: "Labour", unit: "Hrs", rate: 160, cost: 60 } },
     { key: "machining", re: /^machin/i, def: { id: "fixed-machining", name: "Machining", unit: "Hrs", rate: 80, cost: 40 } },
     { key: "assembly", re: /^assembl/i, def: { id: "fixed-assembly", name: "Assembly Labour", unit: "Hrs", rate: 160, cost: 60 } },
-    { key: "installation", re: /^install/i, def: { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 } }
+    { key: "installation", re: /^install/i, def: { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 } },
+    // Cutters: a flat charge per job (not hourly), default $80.
+    { key: "cutters", re: /^cutter/i, def: { id: "fixed-cutters", name: "Cutters", unit: "Job", rate: 80, cost: 80 } }
   ];
   function fixedLabourKey(rate) {
     var name = String(rate.name || "").trim();
@@ -131,7 +133,8 @@
       categories: Array.isArray(c.categories) ? c.categories : d.categories,
       items: Array.isArray(c.items) ? c.items : d.items,
       labourRates: ensureFixedLabour(Array.isArray(c.labourRates) ? c.labourRates : d.labourRates),
-      addOnPresets: Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets,
+      addOnPresets: (Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets)
+        .filter(function (p) { return !/^cutter/i.test(String(p.name || "").trim()); }),
       settings: Object.assign({}, d.settings, c.settings || {}),
       rev: c.rev || null
     };
@@ -306,7 +309,7 @@
     var materials = 0, materialsCost = 0, labour = 0, labourCost = 0, addOns = 0, addOnsCost = 0, hours = 0;
     (job.materials || []).forEach(function (l) { materials += lineSell(l); materialsCost += lineCost(l); });
     (job.labour || []).forEach(function (l) {
-      labour += lineSell(l); labourCost += lineCost(l); hours += num(l.qty);
+      labour += lineSell(l); labourCost += lineCost(l); if (/^(hrs?|hours?)$/i.test(l.unit || "Hrs")) hours += num(l.qty);
     });
     (job.addOns || []).forEach(function (a) { addOns += num(a.amount); addOnsCost += num(a.cost); });
     var itemsTotal = materials + labour + addOns;
