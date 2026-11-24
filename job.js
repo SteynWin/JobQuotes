@@ -217,7 +217,7 @@
       if (!line) {
         // Cutters is charged once per job, so new jobs start at 1 - unless
         // the job already charges Cutters as an add-on (older jobs).
-        var flat = Q.fixedLabourKey(r) === "cutters" &&
+        var flat = Q.fixedLabourKey(r) === "cutters" && job.status === "Draft" &&
           !job.addOns.some(function (a) { return /^cutter/i.test(String(a.name || "").trim()) && Q.num(a.amount); });
         line = { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs", qty: flat ? 1 : 0, cost: 0, price: 0, markup: 0 };
         job.labour.push(line);
@@ -260,53 +260,52 @@
     }).join("");
   }
 
-  // Permanent add-ons (Design) always have a row on every job, at the
-  // charge/cost set on the Labour Rates page, with a tick box to include
-  // or leave it out for this job. Other add-ons are added and edited here.
-  function isFixedAddOn(a) {
-    var p = state.catalog.addOnPresets.find(function (x) { return x.id === a.presetId; });
-    return !!(p && Q.fixedAddOnKey(p));
-  }
-  function syncAddOns() {
-    var before = JSON.stringify(job.addOns);
-    var fixed = state.catalog.addOnPresets.filter(function (p) { return Q.fixedAddOnKey(p); });
-    fixed.forEach(function (p) {
-      var line = job.addOns.find(function (a) { return a.presetId === p.id; }) ||
-        job.addOns.find(function (a) { return !a.presetId && Q.fixedAddOnKey({ name: a.name }) === Q.fixedAddOnKey(p); });
-      if (!line) {
-        // New and draft jobs include it; older quotes aren't changed silently.
-        line = { id: Q.uid(), presetId: p.id, name: p.name, cost: 0, amount: 0, included: job.status === "Draft" };
-        job.addOns.push(line);
+  // Design & delivery: fixed charges with their own section on every job.
+  // The amounts come from the Labour Rates page (locked here, and frozen
+  // once a job is Accepted or later); a tick box includes them or not.
+  // Older jobs had them as add-on lines: those are moved here once.
+  function syncFixed() {
+    var before = JSON.stringify([job.fixedCharges, job.addOns]);
+    if (!job.fixedCharges || typeof job.fixedCharges !== "object") job.fixedCharges = {};
+    Q.FIXED_CHARGES.forEach(function (f) {
+      var fc = job.fixedCharges[f.key];
+      if (!fc) {
+        var old = job.addOns.find(function (a) { return Q.fixedChargeKey(a.name) === f.key; });
+        // Draft jobs include it; older quotes only if they already charged it.
+        fc = { included: old ? old.included !== false && Q.num(old.amount) !== 0 : job.status === "Draft",
+               amount: old ? Q.num(old.amount) : 0, cost: old ? Q.num(old.cost) : 0 };
+        job.fixedCharges[f.key] = fc;
       }
-      line.presetId = p.id;
-      if (line.included === undefined) line.included = true;
-      if (!FROZEN[job.status]) { line.name = p.name; line.amount = Q.num(p.amount); line.cost = Q.num(p.cost); }
+      if (!FROZEN[job.status]) {
+        var cfg = state.catalog.fixedCharges[f.key];
+        fc.amount = Q.num(cfg.amount); fc.cost = Q.num(cfg.cost);
+      }
     });
-    var order = fixed.map(function (p) { return p.id; });
-    job.addOns.sort(function (a, b) {
-      var ia = order.indexOf(a.presetId), ib = order.indexOf(b.presetId);
-      return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
-    });
-    return JSON.stringify(job.addOns) !== before;
+    job.addOns = job.addOns.filter(function (a) { return !Q.fixedChargeKey(a.name); });
+    return JSON.stringify([job.fixedCharges, job.addOns]) !== before;
+  }
+
+  function renderFixed() {
+    if (syncFixed()) changed();
+    $("fixedBody").innerHTML = Q.FIXED_CHARGES.map(function (f) {
+      var fc = job.fixedCharges[f.key], on = !!fc.included;
+      return '<tr' + (on ? "" : ' class="zero"') + '>' +
+        '<td><label class="include-toggle"><input type="checkbox" data-fixed="' + f.key + '"' + (on ? " checked" : "") + '> ' +
+          '<strong>' + Q.esc(f.name) + '</strong> <span class="muted">' + (on ? "(included)" : "(not included)") + '</span></label>' +
+          (f.key === "delivery" ? ' <span class="muted small-note">added after GST</span>' : "") + '</td>' +
+        '<td class="num col-money">' + Q.money(fc.cost) + '</td>' +
+        '<td class="num col-money">' + Q.money(fc.amount) + '</td>' +
+        '</tr>';
+    }).join("");
   }
 
   function renderAddOns() {
-    if (syncAddOns()) changed();
     var tbody = $("addBody");
     if (!job.addOns.length) {
       tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No add-ons.</td></tr>';
       return;
     }
     tbody.innerHTML = job.addOns.map(function (a) {
-      if (isFixedAddOn(a)) {
-        var on = a.included !== false;
-        return '<tr data-row="' + Q.esc(a.id) + '"' + (on ? "" : ' class="zero"') + '>' +
-          '<td><label class="include-toggle"><input type="checkbox" data-list="addOns" data-id="' + Q.esc(a.id) + '" data-f="included"' +
-            (on ? " checked" : "") + '> <strong>' + Q.esc(a.name) + '</strong> <span class="muted">' + (on ? "(included)" : "(not included)") + '</span></label></td>' +
-          '<td class="num col-money">' + Q.money(a.cost) + '</td>' +
-          '<td class="num col-money">' + Q.money(a.amount) + '</td>' +
-          '<td class="col-del"></td></tr>';
-      }
       return '<tr data-row="' + Q.esc(a.id) + '">' +
         '<td>' + textInput("addOns", a, "name") + '</td>' +
         '<td class="num col-money">' + moneyInput("addOns", a, "cost") + '</td>' +
@@ -348,7 +347,7 @@
     }).join("") : '<option value="">No other labour types – add them in Settings</option>';
     $("labPicker").disabled = !others.length;
     $("labAddBtn").disabled = !others.length;
-    $("addPicker").innerHTML = cat.addOnPresets.filter(function (p) { return !Q.fixedAddOnKey(p); }).map(function (p) {
+    $("addPicker").innerHTML = cat.addOnPresets.map(function (p) {
       return '<option value="' + Q.esc(p.id) + '">' + Q.esc(p.name) + (Q.num(p.amount) ? ' – ' + Q.money(p.amount) : "") + '</option>';
     }).join("") + '<option value="">Custom add-on</option>';
   }
@@ -367,12 +366,13 @@
   function buildSummary() {
     var tax = state.catalog.settings.taxName || "Tax";
     $("summaryTable").innerHTML =
-      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Add-ons", "s_add") +
+      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Design", "s_design") + row("Add-ons", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
       '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
+      '<tr><td>Delivery <span class="muted">(after GST)</span></td><td id="s_deliv"></td></tr>' +
       '<tr class="strong big"><td>Total</td><td id="s_total"></td></tr>' +
       '<tr><td>Deposit <input class="pct-input" data-pct="depositPct" type="number" step="1" inputmode="decimal"> %</td><td id="s_dep"></td></tr>' +
       row("Balance due", "s_bal") +
@@ -389,7 +389,7 @@
   function updateNumbers() {
     var c = Q.calcJob(job);
     var set = function (id, v) { var el = $(id); if (el) el.textContent = v; };
-    set("s_mat", Q.money(c.materials)); set("s_lab", Q.money(c.labour)); set("s_add", Q.money(c.addOns));
+    set("s_mat", Q.money(c.materials)); set("s_lab", Q.money(c.labour)); set("s_add", Q.money(c.addOns)); set("s_design", Q.money(c.design)); set("s_deliv", Q.money(c.delivery));
     set("s_items", Q.money(c.itemsTotal)); set("s_margin", Q.money(c.margin)); set("s_var", Q.money(c.variations)); set("s_sub", Q.money(c.subtotal));
     set("s_tax", Q.money(c.tax)); set("s_total", Q.money(c.total)); set("s_dep", Q.money(c.deposit));
     set("s_bal", Q.money(c.balance)); set("s_cost", Q.money(c.cost));
@@ -423,6 +423,7 @@
     renderPickers();
     renderMaterials();
     renderLabour();
+    renderFixed();
     renderAddOns();
     renderExpenses();
     buildSummary();
@@ -435,7 +436,7 @@
       job[el.getAttribute("data-field")] = el.value;
       if (el.id === "f_name") { $("jobTitle").textContent = el.value || "New job"; }
       if (el.id === "f_quoteNo") { $("quoteNoLabel").textContent = el.value; }
-      if (el.id === "f_status") { renderMaterials(); renderLabour(); renderAddOns(); updateNumbers(); }
+      if (el.id === "f_status") { renderMaterials(); renderLabour(); renderFixed(); renderAddOns(); updateNumbers(); }
       changed();
     });
   });
@@ -467,6 +468,12 @@
     changed();
   });
   $("jobLayout").addEventListener("change", function (e) {
+    var fk = e.target.getAttribute && e.target.getAttribute("data-fixed");
+    if (fk) {
+      job.fixedCharges[fk].included = e.target.checked;
+      renderFixed(); updateNumbers(); changed();
+      return;
+    }
     // <select> in expenses fires change, not always input
     if ((e.target.tagName === "SELECT" || e.target.type === "checkbox") && e.target.getAttribute("data-list")) {
       e.target.dispatchEvent(new Event("input", { bubbles: true }));
@@ -652,7 +659,7 @@
       // Ignore the echo of our own save, and don't clobber unsaved typing.
       if (job && (dirty || incoming.rev === lastRev)) {
         renderPickers();
-        if (!dirty) { renderMaterials(); renderLabour(); renderAddOns(); updateNumbers(); }
+        if (!dirty) { renderMaterials(); renderLabour(); renderFixed(); renderAddOns(); updateNumbers(); }
         return;
       }
       job = normaliseJob(Q.clone(incoming));

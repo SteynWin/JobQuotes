@@ -70,10 +70,12 @@
         { id: uid(), name: "Cleaning", unit: "Hrs", rate: 70, cost: 35 }
       ],
       addOnPresets: [
-        { id: "fixed-design", name: "Design", amount: 200, cost: 0 },
-        { id: uid(), name: "Delivery", amount: 100 },
-        { id: uid(), name: "Install", amount: 0 }
+        { id: uid(), name: "Install", amount: 0, cost: 0 }
       ],
+      fixedCharges: {
+        design: { name: "Design", amount: 200, cost: 0 },
+        delivery: { name: "Delivery", amount: 100, cost: 0 }
+      },
       settings: {
         companyName: "Adrina Project Management Pty Ltd",
         abn: "", phone: "", email: "", address: "",
@@ -126,27 +128,30 @@
     return orderedLabourRates(rates);
   }
 
-  // Add-ons that show on every job (currently just Design). Matched by name
-  // so an existing "Design" preset is recognised; added if missing.
-  var FIXED_ADDONS = [
-    { key: "design", re: /^design/i, def: { id: "fixed-design", name: "Design", amount: 200, cost: 0 } }
+  // Fixed charges: Design and Delivery have their own section on every job,
+  // with a tick box per job. Amounts are set on the Labour Rates page.
+  //  - Design is part of the job price (overheads margin and GST apply).
+  //  - Delivery is added after GST, on its own line on the quote.
+  var FIXED_CHARGES = [
+    { key: "design", name: "Design", re: /^design/i, amount: 200, cost: 0 },
+    { key: "delivery", name: "Delivery", re: /^deliver/i, amount: 100, cost: 0 }
   ];
-  function fixedAddOnKey(p) {
-    var name = String(p.name || "").trim();
-    for (var i = 0; i < FIXED_ADDONS.length; i++) {
-      if (p.id === FIXED_ADDONS[i].def.id || FIXED_ADDONS[i].re.test(name)) return FIXED_ADDONS[i].key;
-    }
+  function fixedChargeKey(name) {
+    name = String(name || "").trim();
+    for (var i = 0; i < FIXED_CHARGES.length; i++) if (FIXED_CHARGES[i].re.test(name)) return FIXED_CHARGES[i].key;
     return null;
   }
-  function ensureFixedAddOns(presets) {
-    presets = presets.slice();
-    var fixed = [];
-    FIXED_ADDONS.forEach(function (f) {
-      var p = presets.find(function (x) { return fixedAddOnKey(x) === f.key; });
-      if (!p) { p = Object.assign({}, f.def); presets.push(p); }
-      fixed.push(p);
+  // Build catalog.fixedCharges, taking amounts from old Design/Delivery
+  // add-on presets if this price list predates the separate section.
+  function normaliseFixedCharges(fc, presets) {
+    var out = {};
+    FIXED_CHARGES.forEach(function (f) {
+      var have = fc && fc[f.key];
+      var old = (presets || []).find(function (p) { return fixedChargeKey(p.name) === f.key; });
+      var src = have || old || f;
+      out[f.key] = { name: f.name, amount: num(src.amount), cost: num(src.cost) };
     });
-    return fixed.concat(presets.filter(function (p) { return fixed.indexOf(p) === -1; }));
+    return out;
   }
 
   function normaliseCatalog(c) {
@@ -156,8 +161,12 @@
       categories: Array.isArray(c.categories) ? c.categories : d.categories,
       items: Array.isArray(c.items) ? c.items : d.items,
       labourRates: ensureFixedLabour(Array.isArray(c.labourRates) ? c.labourRates : d.labourRates),
-      addOnPresets: ensureFixedAddOns((Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets)
-        .filter(function (p) { return !/^cutter/i.test(String(p.name || "").trim()); })),
+      fixedCharges: normaliseFixedCharges(c.fixedCharges, c.addOnPresets),
+      // Cutters moved to Labour, Design/Delivery to Fixed charges.
+      addOnPresets: (Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets).filter(function (p) {
+        var n = String(p.name || "").trim();
+        return !/^cutter/i.test(n) && !fixedChargeKey(n);
+      }),
       settings: Object.assign({}, d.settings, c.settings || {}),
       rev: c.rev || null
     };
@@ -335,10 +344,14 @@
       labour += lineSell(l); labourCost += lineCost(l); if (/^(hrs?|hours?)$/i.test(l.unit || "Hrs")) hours += num(l.qty);
     });
     (job.addOns || []).forEach(function (a) {
-      if (a.included === false) return;   // a permanent add-on switched off for this job
+      if (a.included === false) return;
       addOns += num(a.amount); addOnsCost += num(a.cost);
     });
-    var itemsTotal = materials + labour + addOns;
+    var fc = job.fixedCharges || {};
+    var on = function (k) { return fc[k] && fc[k].included; };
+    var design = on("design") ? num(fc.design.amount) : 0, designCost = on("design") ? num(fc.design.cost) : 0;
+    var delivery = on("delivery") ? num(fc.delivery.amount) : 0, deliveryCost = on("delivery") ? num(fc.delivery.cost) : 0;
+    var itemsTotal = materials + labour + design + addOns;
     var margin = itemsTotal * num(job.marginPct) / 100;
     // Variations: extra costs logged on the job. "amount" is what it costs
     // you; "charge" is what the client pays for it (0 = you absorb it).
@@ -347,19 +360,21 @@
     (job.expenses || []).forEach(function (e) { actual += num(e.amount); variations += num(e.charge); });
     var subtotal = itemsTotal + margin + variations;
     var tax = subtotal * num(job.taxPct) / 100;
-    var total = subtotal + tax;
+    var total = subtotal + tax + delivery;   // delivery is after GST
     var deposit = total * num(job.depositPct) / 100;
-    var cost = materialsCost + labourCost + addOnsCost;
+    var cost = materialsCost + labourCost + designCost + addOnsCost + deliveryCost;
+    var revenue = subtotal + delivery;      // what you're paid, excluding GST
     return {
       materials: round2(materials), materialsCost: round2(materialsCost),
       labour: round2(labour), labourCost: round2(labourCost), hours: round2(hours),
       addOns: round2(addOns), addOnsCost: round2(addOnsCost),
+      design: round2(design), delivery: round2(delivery),
       itemsTotal: round2(itemsTotal), margin: round2(margin), variations: round2(variations), subtotal: round2(subtotal),
       tax: round2(tax), total: round2(total), deposit: round2(deposit),
       balance: round2(total - deposit),
-      cost: round2(cost), profit: round2(subtotal - cost),
-      profitPct: subtotal ? (subtotal - cost) / subtotal * 100 : 0,
-      actual: round2(actual), actualProfit: round2(subtotal - cost - actual)
+      cost: round2(cost), profit: round2(revenue - cost),
+      profitPct: revenue ? (revenue - cost) / revenue * 100 : 0,
+      actual: round2(actual), actualProfit: round2(revenue - cost - actual)
     };
   }
 
@@ -373,6 +388,10 @@
       status: "Draft", date: todayISO(), notes: "",
       marginPct: num(s.marginPct), taxPct: num(s.taxPct), depositPct: num(s.depositPct),
       materials: [], labour: [], addOns: [], expenses: [],
+      fixedCharges: {
+        design: { included: true, amount: 0, cost: 0 },
+        delivery: { included: true, amount: 0, cost: 0 }
+      },
       createdAt: Date.now(), updatedAt: Date.now()
     };
   }
@@ -479,7 +498,7 @@
     STATUSES: STATUSES, calcJob: calcJob, lineSell: lineSell, lineCost: lineCost,
     newJob: newJob, defaultCatalog: defaultCatalog, normaliseCatalog: normaliseCatalog,
     fixedLabourKey: fixedLabourKey,
-    fixedAddOnKey: fixedAddOnKey,
+    FIXED_CHARGES: FIXED_CHARGES, fixedChargeKey: fixedChargeKey,
     renderChrome: renderChrome, setSyncStatus: setSyncStatus, debounce: debounce,
     downloadFile: downloadFile, toCSV: toCSV, parseCSV: parseCSV, clone: clone
   };

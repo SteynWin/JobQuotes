@@ -37,19 +37,28 @@
         '</tr>';
     }).join("") : '<tr><td colspan="6" class="empty-note">No labour types.</td></tr>';
 
+    $("fixedBody").innerHTML = Q.FIXED_CHARGES.map(function (f) {
+      var fc = catalog.fixedCharges[f.key];
+      return '<tr><td><strong>' + Q.esc(f.name) + '</strong></td>' +
+        '<td class="num col-money"><input type="number" step="0.01" inputmode="decimal" data-fixedkey="' + f.key + '" data-f="cost" value="' + Q.esc(fc.cost) + '"></td>' +
+        '<td class="num col-money"><input type="number" step="0.01" inputmode="decimal" data-fixedkey="' + f.key + '" data-f="amount" value="' + Q.esc(fc.amount) + '"></td>' +
+        '<td class="col-del"><span class="muted" title="Shows on every job">🔒</span></td></tr>';
+    }).join("");
+
     $("presetBody").innerHTML = catalog.addOnPresets.length ? catalog.addOnPresets.map(function (p) {
       return '<tr>' +
         '<td>' + inp("addOnPresets", p, "name", "text") + '</td>' +
         '<td class="num col-money">' + inp("addOnPresets", p, "cost", "number") + '</td>' +
         '<td class="num col-money">' + inp("addOnPresets", p, "amount", "number") + '</td>' +
-        '<td class="col-del">' + (Q.fixedAddOnKey(p) ? '<span class="muted" title="Shows on every job">🔒</span>' :
-          '<button type="button" class="icon-btn" data-del="addOnPresets" data-id="' + Q.esc(p.id) + '">&times;</button>') + '</td>' +
+        '<td class="col-del"><button type="button" class="icon-btn" data-del="addOnPresets" data-id="' + Q.esc(p.id) + '">&times;</button></td>' +
         '</tr>';
     }).join("") : '<tr><td colspan="3" class="empty-note">No presets.</td></tr>';
   }
 
   document.querySelector("main").addEventListener("input", function (e) {
     var el = e.target, list = el.getAttribute("data-list");
+    var fk = el.getAttribute("data-fixedkey");
+    if (fk) { catalog.fixedCharges[fk][el.getAttribute("data-f")] = Q.num(el.value); changed(); return; }
     if (!list) return;
     var obj = catalog[list].find(function (x) { return x.id === el.getAttribute("data-id"); });
     if (!obj) return;

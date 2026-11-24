@@ -363,3 +363,4 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
 .new-item-pricing input[type="number"] { width: 80px; min-width: 70px; padding: 5px 6px; }
 .include-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .include-toggle input { width: 18px; height: 18px; accent-color: var(--brand-tan-dark); }
+.small-note { font-size: 0.78rem; margin-left: 6px; }

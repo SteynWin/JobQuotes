@@ -54,6 +54,10 @@
           unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k };
       }) });
     }
+    var fc = job.fixedCharges || {};
+    if (fc.design && fc.design.included && Q.num(fc.design.amount)) {
+      sections.push({ name: "Design", rows: [{ name: "Design", desc: "", qty: 1, unit: "", unitPrice: Q.num(fc.design.amount) * k }] });
+    }
     var adds = (job.addOns || []).filter(function (a) { return Q.num(a.amount) !== 0 && a.included !== false; });
     if (adds.length) {
       sections.push({ name: "Additional items", rows: adds.map(function (a) {
@@ -119,6 +123,7 @@
         (c.variations ? tot("Variations", c.variations) : "") : "") +
       tot("Subtotal", c.subtotal) +
       tot(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +
+      (c.delivery ? tot("Delivery", c.delivery) : "") +
       '<tr class="qp-grand"><td>Total</td><td>' + Q.money(c.total) + '</td></tr>' +
       (Q.num(job.depositPct) ? '<tr class="qp-dep"><td>Deposit (' + Q.num(job.depositPct) + '%)</td><td>' + Q.money(c.deposit) + '</td></tr>' +
         '<tr class="qp-dep"><td>Balance due</td><td>' + Q.money(c.balance) + '</td></tr>' : "") +
