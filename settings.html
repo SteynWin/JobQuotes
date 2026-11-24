@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings – Job Quotes</title>
+<!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
+<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="quotes.css?v=1">
+</head>
+<body>
+
+<div id="pinGate" class="pin-gate no-print">
+  <div class="pin-gate-box">
+    <img src="assets/logo.png" alt="" class="pin-gate-logo">
+    <h2>Job Quotes</h2>
+    <p>Enter the access code to continue</p>
+    <form id="pinForm">
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="pinInput" placeholder="Code" autocomplete="off" maxlength="10">
+      <button type="submit">Unlock</button>
+    </form>
+    <p id="pinError" class="pin-gate-error"></p>
+  </div>
+</div>
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("jq_access_ok") === "1") {
+        document.getElementById("pinGate").style.display = "none";
+        return;
+      }
+    } catch (e) {}
+    document.body.classList.add("gate-locked");
+  })();
+</script>
+<script src="access-gate.js?v=1"></script>
+
+<header class="app-header no-print" id="appHeader"></header>
+
+<main class="container">
+
+  <section class="card">
+    <h2 class="card-title">Business details</h2>
+    <p class="hint">Printed at the top of every quote.</p>
+    <div class="q-grid">
+      <div class="q-field"><label for="s_companyName">Company name</label><input id="s_companyName" data-key="companyName"></div>
+      <div class="q-field"><label for="s_abn">ABN</label><input id="s_abn" data-key="abn"></div>
+      <div class="q-field"><label for="s_phone">Phone</label><input id="s_phone" data-key="phone"></div>
+      <div class="q-field"><label for="s_email">Email</label><input id="s_email" data-key="email"></div>
+      <div class="q-field wide"><label for="s_address">Address</label><input id="s_address" data-key="address"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">Pricing defaults</h2>
+    <p class="hint">Used for new jobs. Each job can override them in its Quote summary.</p>
+    <div class="q-grid">
+      <div class="q-field"><label for="s_marginPct">Margin % on subtotal</label><input id="s_marginPct" data-key="marginPct" type="number" step="0.1" inputmode="decimal"></div>
+      <div class="q-field"><label for="s_taxName">Tax name</label><input id="s_taxName" data-key="taxName"></div>
+      <div class="q-field"><label for="s_taxPct">Tax %</label><input id="s_taxPct" data-key="taxPct" type="number" step="0.1" inputmode="decimal"></div>
+      <div class="q-field"><label for="s_depositPct">Deposit %</label><input id="s_depositPct" data-key="depositPct" type="number" step="1" inputmode="decimal"></div>
+      <div class="q-field"><label for="s_validDays">Quote valid for (days)</label><input id="s_validDays" data-key="validDays" type="number" step="1" inputmode="numeric"></div>
+      <div class="q-field"><label for="s_quotePrefix">Quote # prefix</label><input id="s_quotePrefix" data-key="quotePrefix"></div>
+      <div class="q-field"><label for="s_nextQuoteNumber">Next quote #</label><input id="s_nextQuoteNumber" data-key="nextQuoteNumber" type="number" step="1" inputmode="numeric"></div>
+      <div class="q-field wide"><label for="s_terms">Terms &amp; conditions (printed on quotes)</label><textarea id="s_terms" data-key="terms" rows="5"></textarea></div>
+    </div>
+    <div class="save-state" id="saveState" style="text-align:left"></div>
+  </section>
+
+  <section class="card backup-card">
+    <div class="backup-row">
+      <div class="backup-text">
+        <strong>Your data</strong>
+        <p>Download a backup of all jobs, prices, labour rates and settings, or restore one.</p>
+      </div>
+      <div class="backup-actions">
+        <button type="button" id="backupDownloadBtn">Download Backup</button>
+        <button type="button" id="backupRestoreBtn">Restore Backup</button>
+        <button type="button" id="resetCatalogBtn" class="danger-btn">Reset price list</button>
+        <input type="file" id="backupFileInput" accept="application/json" class="hidden">
+      </div>
+    </div>
+    <div id="backupMsg" class="form-errors" role="status"></div>
+  </section>
+</main>
+
+<footer class="app-footer no-print">
+  <p id="footerNote">Data is stored locally in your browser. Nothing is uploaded anywhere.</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="common.js?v=1"></script>
+<script src="settings.js?v=1"></script>
+</body>
+</html>

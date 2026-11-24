@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Labour Rates – Job Quotes</title>
+<!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
+<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="quotes.css?v=1">
+</head>
+<body>
+
+<div id="pinGate" class="pin-gate no-print">
+  <div class="pin-gate-box">
+    <img src="assets/logo.png" alt="" class="pin-gate-logo">
+    <h2>Job Quotes</h2>
+    <p>Enter the access code to continue</p>
+    <form id="pinForm">
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="pinInput" placeholder="Code" autocomplete="off" maxlength="10">
+      <button type="submit">Unlock</button>
+    </form>
+    <p id="pinError" class="pin-gate-error"></p>
+  </div>
+</div>
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("jq_access_ok") === "1") {
+        document.getElementById("pinGate").style.display = "none";
+        return;
+      }
+    } catch (e) {}
+    document.body.classList.add("gate-locked");
+  })();
+</script>
+<script src="access-gate.js?v=1"></script>
+
+<header class="app-header no-print" id="appHeader"></header>
+
+<main class="container">
+
+  <section class="card">
+    <div class="toolbar"><h2 class="card-title">Labour Rates</h2></div>
+    <p class="hint"><strong>Cost / hr</strong> is what the work costs you (wages and on-costs). <strong>Rate / hr</strong> is what you charge the client. Mozaik reports labour as <em>Labor</em>, <em>Machining</em> and <em>Part Labor</em> hours.</p>
+    <div class="table-scroll">
+      <table class="q-table">
+        <thead>
+          <tr>
+            <th>Labour type</th>
+            <th class="col-unit">Unit</th>
+            <th class="num col-money">Cost / hr</th>
+            <th class="num col-money">Rate / hr</th>
+            <th class="num col-pct">Margin</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="rateBody"></tbody>
+      </table>
+    </div>
+    <div class="add-row"><button type="button" class="small-btn" id="rateAddBtn">+ Add labour type</button></div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar"><h2 class="card-title">Add-on presets</h2></div>
+    <p class="hint">Quick fixed charges you can add to a job, such as Design, Cutters and Delivery.</p>
+    <div class="table-scroll">
+      <table class="q-table">
+        <thead><tr><th>Add-on</th><th class="num col-money">Default charge</th><th class="col-del"></th></tr></thead>
+        <tbody id="presetBody"></tbody>
+      </table>
+    </div>
+    <div class="add-row"><button type="button" class="small-btn" id="presetAddBtn">+ Add preset</button></div>
+  </section>
+</main>
+
+<footer class="app-footer no-print">
+  <p id="footerNote">Data is stored locally in your browser. Nothing is uploaded anywhere.</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="common.js?v=1"></script>
+<script src="labour.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job – Job Quotes</title>
+<!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
+<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="quotes.css?v=1">
+</head>
+<body>
+
+<div id="pinGate" class="pin-gate no-print">
+  <div class="pin-gate-box">
+    <img src="assets/logo.png" alt="" class="pin-gate-logo">
+    <h2>Job Quotes</h2>
+    <p>Enter the access code to continue</p>
+    <form id="pinForm">
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="pinInput" placeholder="Code" autocomplete="off" maxlength="10">
+      <button type="submit">Unlock</button>
+    </form>
+    <p id="pinError" class="pin-gate-error"></p>
+  </div>
+</div>
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("jq_access_ok") === "1") {
+        document.getElementById("pinGate").style.display = "none";
+        return;
+      }
+    } catch (e) {}
+    document.body.classList.add("gate-locked");
+  })();
+</script>
+<script src="access-gate.js?v=1"></script>
+
+<header class="app-header no-print" id="appHeader"></header>
+
+<main class="container">
+
+  <p class="no-print"><a href="index.html" class="muted">&larr; All jobs</a></p>
+  <div id="notFound" class="card hidden"><p>That job couldn't be found. It may have been deleted. <a href="index.html">Back to jobs</a></p></div>
+
+  <div class="job-layout hidden" id="jobLayout">
+    <div>
+      <section class="card">
+        <div class="toolbar">
+          <h2 class="card-title" id="jobTitle">Job details</h2>
+          <span class="muted" id="quoteNoLabel"></span>
+        </div>
+        <div class="q-grid">
+          <div class="q-field"><label for="f_name">Job name</label><input id="f_name" data-field="name" placeholder="e.g. Jacques 12 Hume Rd kitchen"></div>
+          <div class="q-field"><label for="f_customer">Customer</label><input id="f_customer" data-field="customer"></div>
+          <div class="q-field"><label for="f_phone">Phone</label><input id="f_phone" data-field="phone" type="tel"></div>
+          <div class="q-field"><label for="f_email">Email</label><input id="f_email" data-field="email" type="email"></div>
+          <div class="q-field"><label for="f_address">Site address</label><input id="f_address" data-field="address"></div>
+          <div class="q-field"><label for="f_date">Quote date</label><input id="f_date" data-field="date" type="date"></div>
+          <div class="q-field"><label for="f_status">Status</label><select id="f_status" data-field="status"></select></div>
+          <div class="q-field"><label for="f_quoteNo">Quote #</label><input id="f_quoteNo" data-field="quoteNo"></div>
+          <div class="q-field wide"><label for="f_notes">Notes shown on the quote</label><textarea id="f_notes" data-field="notes" placeholder="Scope, colours, inclusions/exclusions…"></textarea></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <h2 class="card-title">Materials &amp; hardware</h2>
+          <span class="section-total">Total <strong id="matTotal">$0.00</strong></span>
+        </div>
+        <p class="hint">Enter quantities from your Mozaik report. Prices are copied from the Price List when you add an item; change them here for this job only.</p>
+        <div class="table-scroll">
+          <table class="q-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Description</th>
+                <th class="num col-qty">Qty</th>
+                <th class="col-unit">Unit</th>
+                <th class="num col-money">Cost</th>
+                <th class="num col-money">Price</th>
+                <th class="num col-pct">Markup %</th>
+                <th class="num col-total">Total</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="matBody"></tbody>
+          </table>
+        </div>
+        <div class="add-row">
+          <select id="matPicker" class="q-input"></select>
+          <button type="button" class="small-btn" id="matAddBtn">+ Add item</button>
+          <button type="button" class="small-btn" id="matCustomBtn">+ Custom line</button>
+          <button type="button" class="small-btn" id="matAllBtn" title="Adds every Price List item not already on this job, with qty 0 – like Mozaik's template">+ Whole price list</button>
+          <button type="button" class="small-btn" id="matRefreshBtn" title="Re-copy current Price List prices onto this job">Refresh prices</button>
+          <button type="button" class="small-btn danger" id="matClearZeroBtn">Remove zero-qty lines</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <h2 class="card-title">Labour</h2>
+          <span class="section-total"><span id="labHours">0</span> hrs · Total <strong id="labTotal">$0.00</strong></span>
+        </div>
+        <div class="table-scroll">
+          <table class="q-table">
+            <thead>
+              <tr>
+                <th>Labour type</th>
+                <th>Description</th>
+                <th class="num col-qty">Hours</th>
+                <th class="num col-money">Cost / hr</th>
+                <th class="num col-money">Rate / hr</th>
+                <th class="num col-pct">Markup %</th>
+                <th class="num col-total">Total</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="labBody"></tbody>
+          </table>
+        </div>
+        <div class="add-row">
+          <select id="labPicker" class="q-input"></select>
+          <button type="button" class="small-btn" id="labAddBtn">+ Add labour</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <h2 class="card-title">Add-ons</h2>
+          <span class="section-total">Total <strong id="addTotal">$0.00</strong></span>
+        </div>
+        <p class="hint">Fixed charges such as design, cutters, delivery or a supplied appliance.</p>
+        <div class="table-scroll">
+          <table class="q-table">
+            <thead>
+              <tr>
+                <th>Add-on</th>
+                <th class="num col-money">Your cost</th>
+                <th class="num col-money">Charge</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="addBody"></tbody>
+          </table>
+        </div>
+        <div class="add-row">
+          <select id="addPicker" class="q-input"></select>
+          <button type="button" class="small-btn" id="addAddBtn">+ Add</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <h2 class="card-title">Actual costs (spent)</h2>
+          <span class="section-total">Spent <strong id="expTotal">$0.00</strong> of <span id="expBudget">$0.00</span> estimated</span>
+        </div>
+        <p class="hint">Log supplier invoices and wages as the job runs, to see how actual costs compare with the estimate. Not shown on the quote.</p>
+        <div class="table-scroll">
+          <table class="q-table">
+            <thead>
+              <tr>
+                <th style="width:140px">Date</th>
+                <th style="width:150px">Type</th>
+                <th>Supplier / description</th>
+                <th class="num col-total">Amount</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="expBody"></tbody>
+          </table>
+        </div>
+        <div class="add-row">
+          <button type="button" class="small-btn" id="expAddBtn">+ Add cost</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="card job-summary">
+      <h2 class="card-title">Quote summary</h2>
+      <table class="summary-table" id="summaryTable"></table>
+      <div class="summary-actions">
+        <a class="primary-btn" id="viewQuoteBtn" href="#" style="text-align:center;text-decoration:none">View / print quote</a>
+        <button type="button" class="ghost-btn" id="dupJobBtn">Duplicate job</button>
+        <button type="button" class="ghost-btn" id="delJobBtn" style="color:var(--danger)">Delete job</button>
+      </div>
+      <div class="save-state" id="saveState"></div>
+    </aside>
+  </div>
+</main>
+
+<footer class="app-footer no-print">
+  <p id="footerNote">Data is stored locally in your browser. Nothing is uploaded anywhere.</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="common.js?v=1"></script>
+<script src="job.js?v=1"></script>
+</body>
+</html>

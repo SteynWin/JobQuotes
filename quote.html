@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote – Job Quotes</title>
+<!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
+<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="quotes.css?v=1">
+</head>
+<body>
+
+<div id="pinGate" class="pin-gate no-print">
+  <div class="pin-gate-box">
+    <img src="assets/logo.png" alt="" class="pin-gate-logo">
+    <h2>Job Quotes</h2>
+    <p>Enter the access code to continue</p>
+    <form id="pinForm">
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="pinInput" placeholder="Code" autocomplete="off" maxlength="10">
+      <button type="submit">Unlock</button>
+    </form>
+    <p id="pinError" class="pin-gate-error"></p>
+  </div>
+</div>
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("jq_access_ok") === "1") {
+        document.getElementById("pinGate").style.display = "none";
+        return;
+      }
+    } catch (e) {}
+    document.body.classList.add("gate-locked");
+  })();
+</script>
+<script src="access-gate.js?v=1"></script>
+
+<header class="app-header no-print" id="appHeader"></header>
+
+<main class="container">
+
+  <section class="card no-print">
+    <div class="quote-controls">
+      <a href="#" id="backToJob" class="muted">&larr; Back to job</a>
+      <span style="flex:1"></span>
+      <label class="q-label" for="detailLevel">Show</label>
+      <select id="detailLevel" class="q-input">
+        <option value="items">Every item with prices</option>
+        <option value="itemsNoPrice">Every item, quantities only</option>
+        <option value="categories">Category totals only</option>
+        <option value="total">Grand total only</option>
+      </select>
+      <label class="q-label"><input type="checkbox" id="foldMargin" checked> Spread margin into prices</label>
+      <button type="button" class="ghost-btn" id="printBtn">Print</button>
+      <button type="button" class="primary-btn" id="pdfBtn">Download PDF</button>
+    </div>
+  </section>
+  <div id="notFound" class="card hidden"><p>That job couldn't be found. <a href="index.html">Back to jobs</a></p></div>
+  <div class="quote-paper" id="quotePaper"></div>
+</main>
+
+<footer class="app-footer no-print">
+  <p id="footerNote">Data is stored locally in your browser. Nothing is uploaded anywhere.</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js"></script>
+<script src="firebase-config.js"></script>
+<script src="common.js?v=1"></script>
+<script src="quote-print.js?v=1"></script>
+</body>
+</html>
