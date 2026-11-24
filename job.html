@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "8";
+    var APP_VERSION = "9";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -214,7 +214,7 @@
           </table>
         </div>
         <div class="add-row">
-          <button type="button" class="small-btn" id="expAddBtn">+ Add extra cost</button>
+          <button type="button" class="small-btn" id="expAddBtn">+ Add variation</button>
         </div>
       </section>
     </div>
