@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "7";
+    var APP_VERSION = "8";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -170,7 +170,7 @@
 
       <section class="card">
         <div class="toolbar">
-          <h2 class="card-title">Add-ons</h2>
+          <h2 class="card-title">Extras</h2>
           <span class="section-total">Total <strong id="addTotal">$0.00</strong></span>
         </div>
         <p class="hint">Any other one-off charges for this job, such as a supplied appliance or a site fee. Type a description, your cost and the charge.</p>
@@ -188,7 +188,7 @@
           </table>
         </div>
         <div class="add-row">
-          <button type="button" class="small-btn" id="addAddBtn">+ Add add-on</button>
+          <button type="button" class="small-btn" id="addAddBtn">+ Add extra</button>
         </div>
       </section>
 
@@ -239,6 +239,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=23"></script>
-<script src="job.js?v=24"></script>
+<script src="job.js?v=25"></script>
 </body>
 </html>

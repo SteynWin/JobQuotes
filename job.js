@@ -319,7 +319,7 @@
   function renderAddOns() {
     var tbody = $("addBody");
     if (!job.addOns.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No add-ons.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No extras.</td></tr>';
       return;
     }
     tbody.innerHTML = job.addOns.map(function (a) {
@@ -380,7 +380,7 @@
   function buildSummary() {
     var tax = state.catalog.settings.taxName || "Tax";
     $("summaryTable").innerHTML =
-      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Add-ons", "s_add") +
+      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Extras", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
       '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
