@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "13";
+    var APP_VERSION = "14";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -30,7 +30,7 @@
 </script>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=23">
+<link rel="stylesheet" href="quotes.css?v=24">
 </head>
 <body>
 
@@ -224,6 +224,8 @@
       <table class="summary-table" id="summaryTable"></table>
       <div class="summary-actions">
         <a class="primary-btn" id="viewQuoteBtn" href="#" style="text-align:center;text-decoration:none">View / print quote</a>
+        <a class="ghost-btn" id="approvalBtn" href="#" style="text-align:center;text-decoration:none">Office approval</a>
+        <div class="approval-state" id="approvalState"></div>
         <button type="button" class="ghost-btn" id="delJobBtn" style="color:var(--danger)">Delete job</button>
       </div>
       <div class="save-state" id="saveState"></div>
@@ -239,6 +241,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=23"></script>
-<script src="job.js?v=25"></script>
+<script src="job.js?v=26"></script>
 </body>
 </html>

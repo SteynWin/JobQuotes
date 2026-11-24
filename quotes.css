@@ -385,3 +385,27 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
 .status-select.status-Lost { background-color: var(--danger-bg); color: var(--danger); }
 .status-select option { background: #fff; color: var(--text); font-weight: 400; }
 .q-table .status-select { width: auto; border-radius: 999px; padding: 4px 8px; border-color: transparent; }
+
+/* Office approval page */
+.approval-paper { max-width: 980px; }
+.internal-tag { display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 999px; background: var(--danger-bg); color: var(--danger); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+.appr-h { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--brand-tan-dark); margin: 26px 0 8px; }
+.appr-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 6px 0 4px; }
+.appr-tiles .tile { padding: 10px 12px; }
+.appr-tiles .tile-value { font-size: 1.15rem; }
+.appr-table td, .appr-table th { white-space: nowrap; }
+.appr-table td:first-child { white-space: normal; }
+.appr-table tr.appr-sum td { font-weight: 700; border-top: 1px solid #ccc; }
+.appr-table tr.appr-grand td { font-weight: 800; border-top: 2px solid var(--text); font-size: 0.92rem; }
+.appr-lines { font-size: 0.8rem; }
+.appr-desc { font-size: 0.74rem; }
+.appr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.appr-totals { width: 100%; margin: 0; }
+.appr-totals tr.strong td { font-weight: 700; border-top: 1px solid #ddd; }
+.appr-note { font-size: 0.78rem; margin-top: 6px; }
+.appr-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.appr-form .q-input { flex: 1 1 200px; width: auto; }
+.appr-approved { padding: 10px 14px; background: #eaf7ee; border-left: 3px solid var(--success); border-radius: 6px; }
+.approval-state { font-size: 0.8rem; color: var(--muted); text-align: center; }
+.approval-state.approved { color: var(--success); font-weight: 600; }
+@media (max-width: 700px) { .appr-cols { grid-template-columns: 1fr; } }

@@ -375,6 +375,10 @@
     $("jobTitle").textContent = job.name || "New job";
     document.title = (job.name || "Job") + " – Job Quotes";
     $("viewQuoteBtn").href = "quote.html?id=" + encodeURIComponent(job.id);
+    $("approvalBtn").href = "approval.html?id=" + encodeURIComponent(job.id);
+    $("approvalState").innerHTML = job.approval && job.approval.by
+      ? '✔ Approved by ' + Q.esc(job.approval.by) + ' on ' + Q.esc(Q.fmtDate(job.approval.date)) : "Not yet approved by the office";
+    $("approvalState").className = "approval-state" + (job.approval && job.approval.by ? " approved" : "");
   }
 
   function buildSummary() {
@@ -624,6 +628,11 @@
     job.expenses.push(x);
     rerender("expenses"); changed();
     focusRow(x.id, "description");
+  });
+
+  $("approvalBtn").addEventListener("click", function (e) {
+    e.preventDefault();
+    saveThenGo("approval.html?id=" + encodeURIComponent(job.id));
   });
 
   $("viewQuoteBtn").addEventListener("click", function (e) {

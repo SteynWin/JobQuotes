@@ -25,6 +25,9 @@ The access code is **3622**. To change it, edit `ACCESS_CODE` in `access-gate.js
   plus estimated cost and profit. Log supplier invoices, extra wages and
   site changes under **Extra costs and variations**. Each has your cost and an optional
   client charge; charged variations are added to the quote under **Variations**.
+- **Office approval**: an internal overview of a job with every line's cost, sell price and profit,
+  section totals, overheads & margin, GST, delivery, variations and profit, plus an Approve step
+  (who and when). Printable / PDF; never shown to the client.
 - **Quote**: a printable client quote, also downloadable as a PDF. You choose
   what the client sees: every item, quantities only, category totals, or just
   the total. The margin can be spread into the prices or shown as its own line.
