@@ -240,7 +240,7 @@
     $("summaryTable").innerHTML =
       row("Materials", "s_mat") + row("Labour", "s_lab") + row("Add-ons", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
-      '<tr><td>Margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
+      '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
       '<tr class="strong big"><td>Total</td><td id="s_total"></td></tr>' +

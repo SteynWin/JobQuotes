@@ -333,3 +333,9 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
   .job-layout { grid-template-columns: minmax(0, 1fr); }
   .job-summary { position: static; }
 }
+
+/* Summary: let labels wrap, keep amounts on one line and visible. */
+.summary-table { table-layout: auto; }
+.summary-table td:first-child { white-space: normal; }
+.summary-table td:last-child { white-space: nowrap; padding-left: 8px; }
+.job-layout { grid-template-columns: minmax(0, 1fr) 330px; }

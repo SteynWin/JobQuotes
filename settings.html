@@ -6,7 +6,7 @@
 <title>Settings – Job Quotes</title>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=3">
+<link rel="stylesheet" href="quotes.css?v=5">
 </head>
 <body>
 
@@ -51,43 +51,11 @@
     </div>
   </section>
 
-  <section class="card" id="labour">
-    <div class="toolbar"><h2 class="card-title">Labour rates</h2></div>
-    <p class="hint"><strong>Cost</strong> is what the work costs you (wages and on-costs). <strong>Rate</strong> is what you charge the client, per hour (or per job for Cutters). Rates are set <strong>only here</strong> and can't be changed on a job. The standard types (🔒) appear on every job. Other types you add here, such as Sanding or Cleaning, can be added to a job with <em>+ Add other labour</em>.</p>
-    <div class="table-scroll">
-      <table class="q-table">
-        <thead>
-          <tr>
-            <th>Labour type</th>
-            <th class="col-unit">Unit</th>
-            <th class="num col-money">Cost</th>
-            <th class="num col-money">Rate</th>
-            <th class="num col-pct">Margin</th>
-            <th class="col-del"></th>
-          </tr>
-        </thead>
-        <tbody id="rateBody"></tbody>
-      </table>
-    </div>
-    <div class="add-row"><button type="button" class="small-btn" id="rateAddBtn">+ Add labour type</button></div>
-  </section>
-
   <section class="card">
-    <div class="toolbar"><h2 class="card-title">Add-on presets</h2></div>
-    <p class="hint">Quick fixed charges you can add to a job, such as Design and Delivery.</p>
-    <div class="table-scroll">
-      <table class="q-table">
-        <thead><tr><th>Add-on</th><th class="num col-money">Default charge</th><th class="col-del"></th></tr></thead>
-        <tbody id="presetBody"></tbody>
-      </table>
-    </div>
-    <div class="add-row"><button type="button" class="small-btn" id="presetAddBtn">+ Add preset</button></div>
-  </section>
-  <section class="card">
-    <h2 class="card-title">Pricing defaults</h2>
-    <p class="hint">Used for new jobs. Each job can override them in its Quote summary.</p>
+    <h2 class="card-title">Overheads &amp; pricing</h2>
+    <p class="hint"><strong>Overheads &amp; margin</strong> is added on top of materials, labour and add-ons to cover rent, vehicles, insurance, admin and profit (Mozaik's "Add-On %Subtotal"). These are the defaults for new jobs; each job can adjust them in its Quote summary.</p>
     <div class="q-grid">
-      <div class="q-field"><label for="s_marginPct">Margin % on subtotal</label><input id="s_marginPct" data-key="marginPct" type="number" step="0.1" inputmode="decimal"></div>
+      <div class="q-field"><label for="s_marginPct">Overheads &amp; margin %</label><input id="s_marginPct" data-key="marginPct" type="number" step="0.1" inputmode="decimal"></div>
       <div class="q-field"><label for="s_taxName">Tax name</label><input id="s_taxName" data-key="taxName"></div>
       <div class="q-field"><label for="s_taxPct">Tax %</label><input id="s_taxPct" data-key="taxPct" type="number" step="0.1" inputmode="decimal"></div>
       <div class="q-field"><label for="s_depositPct">Deposit %</label><input id="s_depositPct" data-key="depositPct" type="number" step="1" inputmode="decimal"></div>
@@ -123,7 +91,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=5"></script>
-<script src="settings.js?v=2"></script>
+<script src="common.js?v=6"></script>
+<script src="settings.js?v=6"></script>
 </body>
 </html>
