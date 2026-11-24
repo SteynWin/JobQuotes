@@ -110,7 +110,7 @@
       order.filter(function (g) { return groups[g]; }).map(function (g) {
         return '<optgroup label="' + Q.esc(g) + '">' + groups[g].map(function (it) {
           return '<option value="' + Q.esc(it.id) + '"' + (it.id === selectedId ? " selected" : "") + '>' +
-            Q.esc(it.name) + ' – ' + Q.money(it.price) + '/' + Q.esc(it.unit) + '</option>';
+            Q.esc(it.name) + '</option>';
         }).join("") + '</optgroup>';
       }).join("") +
       '<option value="' + NEW_ITEM + '"' + (isNew ? " selected" : "") + '>➕ New item (not in Price List)…</option>';
