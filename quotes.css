@@ -302,3 +302,34 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
 .q-table .col-pct { width: 66px; }
 .q-table .col-unit { width: 72px; }
 .summary-table td:first-child { white-space: nowrap; }
+
+/* Number boxes in line tables must never collapse: give them a real
+   minimum width, drop the spinner arrows, and let the table scroll
+   sideways on narrow screens instead of squashing columns. */
+.q-table input[type="number"] {
+  min-width: 70px;
+  text-align: right;
+  padding-left: 6px;
+  padding-right: 6px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.q-table input[type="number"]::-webkit-outer-spin-button,
+.q-table input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.q-table input[data-f="qty"] { min-width: 64px; }
+.q-table input[data-f="unit"] { min-width: 56px; }
+.q-table input[data-f="markup"] { min-width: 56px; }
+.q-table input[data-f="name"] { min-width: 150px; }
+.q-table input[data-f="description"] { min-width: 100px; }
+.q-table .col-total { white-space: nowrap; }
+.q-table td { padding-left: 4px; padding-right: 4px; }
+
+/* Give the job editor more room so the line tables fit without scrolling. */
+.container, .header-inner, .q-nav { max-width: 1320px; }
+.job-layout { grid-template-columns: minmax(0, 1fr) 290px; }
+.q-table input[data-f="markup"] { min-width: 50px; }
+.q-table input[data-f="description"] { min-width: 90px; }
+@media (max-width: 1240px) {
+  .job-layout { grid-template-columns: minmax(0, 1fr); }
+  .job-summary { position: static; }
+}
