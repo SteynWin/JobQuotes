@@ -96,8 +96,9 @@
   //    always shown on every job, at the rate set on the Labour Rates page
   //    (not editable here). Once a job is Accepted or later its rates are
   //    frozen, so changing your rates never alters work already agreed.
-  //  - OTHER labour added to this job only (e.g. Sanding, Cleaning), with
-  //    its own name, hours and rate, and a remove button.
+  //  - OTHER labour added to this job only (e.g. Sanding, Cleaning), picked
+  //    from the extra types set up in Settings - also at the Settings rate.
+  // No labour rate can be edited on the job page.
   var FROZEN = { "Accepted": 1, "In Progress": 1, "Completed": 1 };
   function isStandard(l) {
     var r = state.catalog.labourRates.find(function (x) { return x.id === l.rateId; });
@@ -106,6 +107,15 @@
   function syncLabourLines() {
     var before = JSON.stringify(job.labour);
     var standard = state.catalog.labourRates.filter(function (r) { return Q.fixedLabourKey(r); });
+    // Other labour picked from Settings follows its Settings rate too.
+    if (!FROZEN[job.status]) {
+      job.labour.forEach(function (l) {
+        var r = state.catalog.labourRates.find(function (x) { return x.id === l.rateId; });
+        if (r && !Q.fixedLabourKey(r)) {
+          l.name = r.name; l.unit = r.unit || "Hrs"; l.price = Q.num(r.rate); l.cost = Q.num(r.cost); l.markup = 0;
+        }
+      });
+    }
     standard.forEach(function (r) {
       var line = job.labour.find(function (l) { return l.rateId === r.id; }) ||
         job.labour.find(function (l) {
@@ -147,11 +157,10 @@
     tbody.innerHTML = job.labour.map(function (l) {
       var std = isStandard(l);
       return '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
-        '<td>' + (std ? '<strong>' + Q.esc(l.name) + '</strong>' +
-          (/^(hrs?|hours?)$/i.test(l.unit || "Hrs") ? "" : ' <span class="muted">(per ' + Q.esc(String(l.unit).toLowerCase()) + ')</span>')
-          : textInput("labour", l, "name", "e.g. Sanding")) + '</td>' +
+        '<td><strong>' + Q.esc(l.name || "Labour") + '</strong>' +
+          (/^(hrs?|hours?)$/i.test(l.unit || "Hrs") ? "" : ' <span class="muted">(per ' + Q.esc(String(l.unit).toLowerCase()) + ')</span>') + '</td>' +
         '<td class="num col-qty">' + moneyInput("labour", l, "qty") + '</td>' +
-        '<td class="num col-money">' + (std ? Q.money(l.price) : moneyInput("labour", l, "price")) + '</td>' +
+        '<td class="num col-money">' + Q.money(l.price) + '</td>' +
         '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
         '<td class="col-del">' + (std ? "" : '<button type="button" class="icon-btn" data-del="labour" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>') + '</td>' +
         '</tr>';
@@ -204,9 +213,12 @@
         return '<option value="' + Q.esc(it.id) + '">' + Q.esc(it.name) + ' – ' + Q.money(it.price) + '/' + Q.esc(it.unit) + '</option>';
       }).join("") + '</optgroup>';
     }).join("");
-    $("labPicker").innerHTML = cat.labourRates.filter(function (r) { return !Q.fixedLabourKey(r); }).map(function (r) {
-      return '<option value="' + Q.esc(r.id) + '">' + Q.esc(r.name) + ' – ' + Q.money(r.rate) + '/hr</option>';
-    }).join("") + '<option value="">Other (type a name)</option>';
+    var others = cat.labourRates.filter(function (r) { return !Q.fixedLabourKey(r); });
+    $("labPicker").innerHTML = others.length ? others.map(function (r) {
+      return '<option value="' + Q.esc(r.id) + '">' + Q.esc(r.name) + ' – ' + Q.money(r.rate) + '/' + Q.esc(r.unit || "Hrs") + '</option>';
+    }).join("") : '<option value="">No other labour types – add them in Settings</option>';
+    $("labPicker").disabled = !others.length;
+    $("labAddBtn").disabled = !others.length;
     $("addPicker").innerHTML = cat.addOnPresets.map(function (p) {
       return '<option value="' + Q.esc(p.id) + '">' + Q.esc(p.name) + (Q.num(p.amount) ? ' – ' + Q.money(p.amount) : "") + '</option>';
     }).join("") + '<option value="">Custom add-on</option>';
@@ -403,14 +415,12 @@
 
   $("labAddBtn").addEventListener("click", function () {
     var r = state.catalog.labourRates.find(function (x) { return x.id === $("labPicker").value; });
-    var std = state.catalog.labourRates.find(function (x) { return Q.fixedLabourKey(x) === "labour"; });
-    var line = r
-      ? { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: "Hrs", qty: 0, cost: Q.num(r.cost), price: Q.num(r.rate), markup: 0 }
-      : { id: Q.uid(), rateId: null, name: "", description: "", unit: "Hrs", qty: 0,
-          cost: std ? Q.num(std.cost) : 0, price: std ? Q.num(std.rate) : 0, markup: 0 };
+    if (!r) return;
+    var line = { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs", qty: 0,
+      cost: Q.num(r.cost), price: Q.num(r.rate), markup: 0 };
     job.labour.push(line);
     rerender("labour"); changed();
-    focusRow(line.id, r ? "qty" : "name");
+    focusRow(line.id, "qty");
   });
 
   $("addAddBtn").addEventListener("click", function () {

@@ -352,7 +352,6 @@
   var PAGES = [
     { href: "index.html", label: "Jobs", key: "jobs" },
     { href: "prices.html", label: "Price List", key: "prices" },
-    { href: "labour.html", label: "Labour Rates", key: "labour" },
     { href: "settings.html", label: "Settings", key: "settings" }
   ];
 

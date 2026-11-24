@@ -29,8 +29,7 @@ The access code is **3622**. To change it, edit `ACCESS_CODE` in `access-gate.js
   the total. The margin can be spread into the prices or shown as its own line.
 - **Price List**: cost and sell price for every item, by category. Supports
   CSV import and export (Category, Item, Description, Unit, Cost, Price).
-- **Labour Rates**: cost per hour against the rate charged, plus add-on presets.
-- **Settings**: business details, default margin, GST and deposit %, quote
+- **Settings**: business details, labour rates (the only place they can be changed) and add-on presets, default margin, GST and deposit %, quote
   numbering, terms, and backup / restore.
 
 ## Team sync

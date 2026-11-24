@@ -51,6 +51,38 @@
     </div>
   </section>
 
+  <section class="card" id="labour">
+    <div class="toolbar"><h2 class="card-title">Labour rates</h2></div>
+    <p class="hint"><strong>Cost</strong> is what the work costs you (wages and on-costs). <strong>Rate</strong> is what you charge the client, per hour (or per job for Cutters). Rates are set <strong>only here</strong> and can't be changed on a job. The standard types (🔒) appear on every job. Other types you add here, such as Sanding or Cleaning, can be added to a job with <em>+ Add other labour</em>.</p>
+    <div class="table-scroll">
+      <table class="q-table">
+        <thead>
+          <tr>
+            <th>Labour type</th>
+            <th class="col-unit">Unit</th>
+            <th class="num col-money">Cost</th>
+            <th class="num col-money">Rate</th>
+            <th class="num col-pct">Margin</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="rateBody"></tbody>
+      </table>
+    </div>
+    <div class="add-row"><button type="button" class="small-btn" id="rateAddBtn">+ Add labour type</button></div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar"><h2 class="card-title">Add-on presets</h2></div>
+    <p class="hint">Quick fixed charges you can add to a job, such as Design and Delivery.</p>
+    <div class="table-scroll">
+      <table class="q-table">
+        <thead><tr><th>Add-on</th><th class="num col-money">Default charge</th><th class="col-del"></th></tr></thead>
+        <tbody id="presetBody"></tbody>
+      </table>
+    </div>
+    <div class="add-row"><button type="button" class="small-btn" id="presetAddBtn">+ Add preset</button></div>
+  </section>
   <section class="card">
     <h2 class="card-title">Pricing defaults</h2>
     <p class="hint">Used for new jobs. Each job can override them in its Quote summary.</p>
@@ -91,7 +123,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=4"></script>
-<script src="settings.js?v=1"></script>
+<script src="common.js?v=5"></script>
+<script src="settings.js?v=2"></script>
 </body>
 </html>
