@@ -70,7 +70,6 @@
         { id: uid(), name: "Cleaning", unit: "Hrs", rate: 70, cost: 35 }
       ],
       addOnPresets: [
-        { id: uid(), name: "Install", amount: 0, cost: 0 }
       ],
       fixedCharges: {
         design: { name: "Design", amount: 200, cost: 0 },
@@ -163,10 +162,7 @@
       labourRates: ensureFixedLabour(Array.isArray(c.labourRates) ? c.labourRates : d.labourRates),
       fixedCharges: normaliseFixedCharges(c.fixedCharges, c.addOnPresets),
       // Cutters moved to Labour, Design/Delivery to Fixed charges.
-      addOnPresets: (Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets).filter(function (p) {
-        var n = String(p.name || "").trim();
-        return !/^cutter/i.test(n) && !fixedChargeKey(n);
-      }),
+      addOnPresets: [],   // add-ons are typed in per job now
       settings: Object.assign({}, d.settings, c.settings || {}),
       rev: c.rev || null
     };
@@ -337,10 +333,20 @@
   function lineSell(l) { return num(l.qty) * num(l.price) * (1 + num(l.markup) / 100); }
   function lineCost(l) { return num(l.qty) * num(l.cost); }
 
+  // The Installation Labour line has its own section on the job and quote.
+  function isInstallLine(l) {
+    return fixedLabourKey({ id: l.rateId, name: l.name }) === "installation";
+  }
+
   function calcJob(job) {
     var materials = 0, materialsCost = 0, labour = 0, labourCost = 0, addOns = 0, addOnsCost = 0, hours = 0;
     (job.materials || []).forEach(function (l) { materials += lineSell(l); materialsCost += lineCost(l); });
+    var installation = 0, installationCost = 0, installHours = 0;
     (job.labour || []).forEach(function (l) {
+      if (isInstallLine(l)) {
+        installation += lineSell(l); installationCost += lineCost(l); installHours += num(l.qty);
+        return;
+      }
       labour += lineSell(l); labourCost += lineCost(l); if (/^(hrs?|hours?)$/i.test(l.unit || "Hrs")) hours += num(l.qty);
     });
     (job.addOns || []).forEach(function (a) {
@@ -351,7 +357,7 @@
     var on = function (k) { return fc[k] && fc[k].included; };
     var design = on("design") ? num(fc.design.amount) : 0, designCost = on("design") ? num(fc.design.cost) : 0;
     var delivery = on("delivery") ? num(fc.delivery.amount) : 0, deliveryCost = on("delivery") ? num(fc.delivery.cost) : 0;
-    var itemsTotal = materials + labour + design + addOns;
+    var itemsTotal = materials + labour + installation + design + addOns;
     var margin = itemsTotal * num(job.marginPct) / 100;
     // Variations: extra costs logged on the job. "amount" is what it costs
     // you; "charge" is what the client pays for it (0 = you absorb it).
@@ -362,11 +368,12 @@
     var tax = subtotal * num(job.taxPct) / 100;
     var total = subtotal + tax + delivery;   // delivery is after GST
     var deposit = total * num(job.depositPct) / 100;
-    var cost = materialsCost + labourCost + designCost + addOnsCost + deliveryCost;
+    var cost = materialsCost + labourCost + installationCost + designCost + addOnsCost + deliveryCost;
     var revenue = subtotal + delivery;      // what you're paid, excluding GST
     return {
       materials: round2(materials), materialsCost: round2(materialsCost),
       labour: round2(labour), labourCost: round2(labourCost), hours: round2(hours),
+      installation: round2(installation), installHours: round2(installHours),
       addOns: round2(addOns), addOnsCost: round2(addOnsCost),
       design: round2(design), delivery: round2(delivery),
       itemsTotal: round2(itemsTotal), margin: round2(margin), variations: round2(variations), subtotal: round2(subtotal),
@@ -497,7 +504,7 @@
     todayISO: todayISO, fmtDate: fmtDate, addDaysISO: addDaysISO, param: param,
     STATUSES: STATUSES, calcJob: calcJob, lineSell: lineSell, lineCost: lineCost,
     newJob: newJob, defaultCatalog: defaultCatalog, normaliseCatalog: normaliseCatalog,
-    fixedLabourKey: fixedLabourKey,
+    fixedLabourKey: fixedLabourKey, isInstallLine: isInstallLine,
     FIXED_CHARGES: FIXED_CHARGES, fixedChargeKey: fixedChargeKey,
     renderChrome: renderChrome, setSyncStatus: setSyncStatus, debounce: debounce,
     downloadFile: downloadFile, toCSV: toCSV, parseCSV: parseCSV, clone: clone

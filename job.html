@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "5";
+    var APP_VERSION = "6";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -143,6 +143,20 @@
 
       <section class="card">
         <div class="toolbar">
+          <h2 class="card-title">Installation</h2>
+          <span class="section-total"><span id="instHours">0</span> hrs · Total <strong id="instTotal">$0.00</strong></span>
+        </div>
+        <p class="hint">Enter the installation hours. The rate is set on the <a href="labour.html">Labour Rates</a> page (Installation Labour).</p>
+        <div class="table-scroll">
+          <table class="q-table">
+            <thead><tr><th>Installation</th><th class="num col-qty">Hours</th><th class="num col-money">Rate</th><th class="num col-total">Total</th></tr></thead>
+            <tbody id="instBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
           <h2 class="card-title">Design &amp; delivery</h2>
         </div>
         <p class="hint">Fixed charges set on the <a href="labour.html">Labour Rates</a> page. Tick to include them in this job. Delivery is shown separately on the quote, after GST.</p>
@@ -159,12 +173,12 @@
           <h2 class="card-title">Add-ons</h2>
           <span class="section-total">Total <strong id="addTotal">$0.00</strong></span>
         </div>
-        <p class="hint">Any other one-off charges for this job, such as a supplied appliance or a site fee.</p>
+        <p class="hint">Any other one-off charges for this job, such as a supplied appliance or a site fee. Type a description, your cost and the charge.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
               <tr>
-                <th>Add-on</th>
+                <th>Description</th>
                 <th class="num col-money">Your cost</th>
                 <th class="num col-money">Charge</th>
                 <th class="col-del"></th>
@@ -174,8 +188,7 @@
           </table>
         </div>
         <div class="add-row">
-          <select id="addPicker" class="q-input"></select>
-          <button type="button" class="small-btn" id="addAddBtn">+ Add</button>
+          <button type="button" class="small-btn" id="addAddBtn">+ Add add-on</button>
         </div>
       </section>
 
@@ -226,7 +239,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=21"></script>
-<script src="job.js?v=22"></script>
+<script src="common.js?v=23"></script>
+<script src="job.js?v=23"></script>
 </body>
 </html>

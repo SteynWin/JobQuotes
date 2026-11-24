@@ -47,13 +47,14 @@
       byCat[key].rows.push({ name: l.name, desc: l.note || l.description, qty: l.qty, unit: l.unit,
         unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k });
     });
-    var lab = (job.labour || []).filter(function (l) { return Q.num(l.qty) !== 0; });
-    if (lab.length) {
-      sections.push({ name: "Labour", rows: lab.map(function (l) {
-        return { name: l.name, desc: l.description, qty: l.qty, unit: l.unit || "Hrs",
-          unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k };
-      }) });
-    }
+    var labRow = function (l) {
+      return { name: l.name, desc: l.description, qty: l.qty, unit: l.unit || "Hrs",
+        unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k };
+    };
+    var lab = (job.labour || []).filter(function (l) { return Q.num(l.qty) !== 0 && !Q.isInstallLine(l); });
+    if (lab.length) sections.push({ name: "Labour", rows: lab.map(labRow) });
+    var inst = (job.labour || []).filter(function (l) { return Q.num(l.qty) !== 0 && Q.isInstallLine(l); });
+    if (inst.length) sections.push({ name: "Installation", rows: inst.map(labRow) });
     var fc = job.fixedCharges || {};
     if (fc.design && fc.design.included && Q.num(fc.design.amount)) {
       sections.push({ name: "Design", rows: [{ name: "Design", desc: "", qty: 1, unit: "", unitPrice: Q.num(fc.design.amount) * k }] });

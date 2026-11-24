@@ -247,7 +247,7 @@
     // printed quote uses the same numbers shown here.
     if (syncLabourLines()) changed();
     var tbody = $("labBody");
-    tbody.innerHTML = job.labour.map(function (l) {
+    tbody.innerHTML = job.labour.filter(function (l) { return !Q.isInstallLine(l); }).map(function (l) {
       var std = isStandard(l);
       return '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
         '<td><strong>' + Q.esc(l.name || "Labour") + '</strong>' +
@@ -258,6 +258,19 @@
         '<td class="col-del">' + (std ? "" : '<button type="button" class="icon-btn" data-del="labour" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>') + '</td>' +
         '</tr>';
     }).join("");
+  }
+
+  // Installation: the Installation Labour line, shown in its own section.
+  // Hours are entered here; the rate is the Labour Rates one (locked).
+  function renderInstall() {
+    var l = job.labour.find(function (x) { return Q.isInstallLine(x); });
+    $("instBody").innerHTML = !l ? '<tr><td colspan="4" class="empty-note">Add an Installation Labour rate on the Labour Rates page.</td></tr>' :
+      '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
+        '<td><strong>' + Q.esc(l.name) + '</strong></td>' +
+        '<td class="num col-qty">' + moneyInput("labour", l, "qty") + '</td>' +
+        '<td class="num col-money">' + Q.money(l.price) + '</td>' +
+        '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
+      '</tr>';
   }
 
   // Design & delivery: fixed charges with their own section on every job.
@@ -281,7 +294,11 @@
         fc.amount = Q.num(cfg.amount); fc.cost = Q.num(cfg.cost);
       }
     });
-    job.addOns = job.addOns.filter(function (a) { return !Q.fixedChargeKey(a.name); });
+    // Moved elsewhere: Design/Delivery (here) and empty "Install" add-ons
+    // (installation is now hours in its own section).
+    job.addOns = job.addOns.filter(function (a) {
+      return !Q.fixedChargeKey(a.name) && !(/^install/i.test(String(a.name || "").trim()) && !Q.num(a.amount) && !Q.num(a.cost));
+    });
     return JSON.stringify([job.fixedCharges, job.addOns]) !== before;
   }
 
@@ -307,7 +324,7 @@
     }
     tbody.innerHTML = job.addOns.map(function (a) {
       return '<tr data-row="' + Q.esc(a.id) + '">' +
-        '<td>' + textInput("addOns", a, "name") + '</td>' +
+        '<td>' + textInput("addOns", a, "name", "Description, e.g. supplied appliance") + '</td>' +
         '<td class="num col-money">' + moneyInput("addOns", a, "cost") + '</td>' +
         '<td class="num col-money">' + moneyInput("addOns", a, "amount") + '</td>' +
         '<td class="col-del"><button type="button" class="icon-btn" data-del="addOns" data-id="' + Q.esc(a.id) + '" title="Remove">&times;</button></td>' +
@@ -347,9 +364,6 @@
     }).join("") : '<option value="">No other labour types – add them in Settings</option>';
     $("labPicker").disabled = !others.length;
     $("labAddBtn").disabled = !others.length;
-    $("addPicker").innerHTML = cat.addOnPresets.map(function (p) {
-      return '<option value="' + Q.esc(p.id) + '">' + Q.esc(p.name) + (Q.num(p.amount) ? ' – ' + Q.money(p.amount) : "") + '</option>';
-    }).join("") + '<option value="">Custom add-on</option>';
   }
 
   function renderFields() {
@@ -366,7 +380,7 @@
   function buildSummary() {
     var tax = state.catalog.settings.taxName || "Tax";
     $("summaryTable").innerHTML =
-      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Design", "s_design") + row("Add-ons", "s_add") +
+      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Add-ons", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
       '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
@@ -400,6 +414,7 @@
     $("s_actprofit").className = !c.actual ? "muted" : (c.actualProfit >= 0 ? "pos" : "neg");
 
     set("matTotal", Q.money(c.materials)); set("labTotal", Q.money(c.labour)); set("labHours", c.hours);
+    set("s_inst", Q.money(c.installation)); set("instTotal", Q.money(c.installation)); set("instHours", c.installHours);
     set("addTotal", Q.money(c.addOns)); set("expTotal", Q.money(c.actual)); set("expCharge", Q.money(c.variations));
 
     var catTotals = {};
@@ -423,6 +438,7 @@
     renderPickers();
     renderMaterials();
     renderLabour();
+    renderInstall();
     renderFixed();
     renderAddOns();
     renderExpenses();
@@ -436,7 +452,7 @@
       job[el.getAttribute("data-field")] = el.value;
       if (el.id === "f_name") { $("jobTitle").textContent = el.value || "New job"; }
       if (el.id === "f_quoteNo") { $("quoteNoLabel").textContent = el.value; }
-      if (el.id === "f_status") { renderMaterials(); renderLabour(); renderFixed(); renderAddOns(); updateNumbers(); }
+      if (el.id === "f_status") { renderMaterials(); renderLabour(); renderInstall(); renderFixed(); renderAddOns(); updateNumbers(); }
       changed();
     });
   });
@@ -493,7 +509,7 @@
 
   function rerender(list) {
     if (list === "materials") renderMaterials();
-    if (list === "labour") renderLabour();
+    if (list === "labour") { renderLabour(); renderInstall(); }
     if (list === "addOns") renderAddOns();
     if (list === "expenses") renderExpenses();
     updateNumbers();
@@ -597,12 +613,10 @@
   });
 
   $("addAddBtn").addEventListener("click", function () {
-    var id = $("addPicker").value;
-    var p = state.catalog.addOnPresets.find(function (x) { return x.id === id; });
-    var a = { id: Q.uid(), name: p ? p.name : "", cost: p ? Q.num(p.cost) : 0, amount: p ? Q.num(p.amount) : 0 };
+    var a = { id: Q.uid(), name: "", cost: "", amount: "" };
     job.addOns.push(a);
     rerender("addOns"); changed();
-    focusRow(a.id, p ? "amount" : "name");
+    focusRow(a.id, "name");
   });
 
   $("expAddBtn").addEventListener("click", function () {
@@ -659,7 +673,7 @@
       // Ignore the echo of our own save, and don't clobber unsaved typing.
       if (job && (dirty || incoming.rev === lastRev)) {
         renderPickers();
-        if (!dirty) { renderMaterials(); renderLabour(); renderFixed(); renderAddOns(); updateNumbers(); }
+        if (!dirty) { renderMaterials(); renderLabour(); renderInstall(); renderFixed(); renderAddOns(); updateNumbers(); }
         return;
       }
       job = normaliseJob(Q.clone(incoming));

@@ -1,4 +1,4 @@
-/* Labour Rates page: labour types (cost vs charge rate) and add-on presets. */
+/* Labour Rates page: labour types (cost vs charge rate) and the Design & delivery charges. */
 (function () {
   "use strict";
   Q.renderChrome("labour");
@@ -44,15 +44,6 @@
         '<td class="num col-money"><input type="number" step="0.01" inputmode="decimal" data-fixedkey="' + f.key + '" data-f="amount" value="' + Q.esc(fc.amount) + '"></td>' +
         '<td class="col-del"><span class="muted" title="Shows on every job">🔒</span></td></tr>';
     }).join("");
-
-    $("presetBody").innerHTML = catalog.addOnPresets.length ? catalog.addOnPresets.map(function (p) {
-      return '<tr>' +
-        '<td>' + inp("addOnPresets", p, "name", "text") + '</td>' +
-        '<td class="num col-money">' + inp("addOnPresets", p, "cost", "number") + '</td>' +
-        '<td class="num col-money">' + inp("addOnPresets", p, "amount", "number") + '</td>' +
-        '<td class="col-del"><button type="button" class="icon-btn" data-del="addOnPresets" data-id="' + Q.esc(p.id) + '">&times;</button></td>' +
-        '</tr>';
-    }).join("") : '<tr><td colspan="3" class="empty-note">No presets.</td></tr>';
   }
 
   document.querySelector("main").addEventListener("input", function (e) {
@@ -84,9 +75,6 @@
   }
   $("rateAddBtn").addEventListener("click", function () {
     addAndFocus("labourRates", { id: Q.uid(), name: "", unit: "Hrs", rate: 0, cost: 0 });
-  });
-  $("presetAddBtn").addEventListener("click", function () {
-    addAndFocus("addOnPresets", { id: Q.uid(), name: "", amount: 0, cost: 0 });
   });
 
   QuoteStore.init({
