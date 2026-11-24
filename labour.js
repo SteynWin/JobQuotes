@@ -32,7 +32,8 @@
         '<td class="num col-money">' + inp("labourRates", r, "cost", "number") + '</td>' +
         '<td class="num col-money">' + inp("labourRates", r, "rate", "number") + '</td>' +
         '<td class="num col-pct muted" data-margin="' + Q.esc(r.id) + '">' + marginText(r) + '</td>' +
-        '<td class="col-del"><button type="button" class="icon-btn" data-del="labourRates" data-id="' + Q.esc(r.id) + '">&times;</button></td>' +
+        '<td class="col-del">' + (Q.fixedLabourKey(r) ? '<span class="muted" title="Standard type – always shown on jobs">🔒</span>' :
+          '<button type="button" class="icon-btn" data-del="labourRates" data-id="' + Q.esc(r.id) + '">&times;</button>') + '</td>' +
         '</tr>';
     }).join("") : '<tr><td colspan="6" class="empty-note">No labour types.</td></tr>';
 

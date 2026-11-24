@@ -91,22 +91,41 @@
     tbody.innerHTML = html;
   }
 
+  // Every labour type from the Labour Rates page always has a row (hours
+  // start at 0). Lines from types that have since been removed stay
+  // visible, with a remove button, so nothing on an old quote disappears.
+  function syncLabourLines() {
+    state.catalog.labourRates.forEach(function (r) {
+      if (job.labour.some(function (l) { return l.rateId === r.id; })) return;
+      // Older jobs may have this type without a rateId: match by name.
+      var byName = job.labour.find(function (l) {
+        return !l.rateId && String(l.name).trim().toLowerCase() === String(r.name).trim().toLowerCase();
+      });
+      if (byName) { byName.rateId = r.id; return; }
+      job.labour.push({ id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs",
+        qty: 0, cost: Q.num(r.cost), price: Q.num(r.rate), markup: 0 });
+    });
+    var order = state.catalog.labourRates.map(function (r) { return r.id; });
+    job.labour.sort(function (a, b) {
+      var ia = order.indexOf(a.rateId), ib = order.indexOf(b.rateId);
+      return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
+    });
+  }
+
   function renderLabour() {
+    syncLabourLines();
     var tbody = $("labBody");
-    if (!job.labour.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No labour yet. Add Labour, Machining or Part Labour hours from Mozaik.</td></tr>';
-      return;
-    }
+    var known = {};
+    state.catalog.labourRates.forEach(function (r) { known[r.id] = r; });
     tbody.innerHTML = job.labour.map(function (l) {
-      return '<tr data-row="' + Q.esc(l.id) + '">' +
-        '<td>' + textInput("labour", l, "name") + '</td>' +
-        '<td>' + textInput("labour", l, "description", "optional") + '</td>' +
+      var r = known[l.rateId];
+      var label = r ? r.name : (l.name || "Labour");
+      return '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
+        '<td><strong>' + Q.esc(label) + '</strong>' + (r ? "" : ' <span class="muted">(no longer on Labour Rates)</span>') + '</td>' +
         '<td class="num col-qty">' + moneyInput("labour", l, "qty") + '</td>' +
-        '<td class="num col-money">' + moneyInput("labour", l, "cost") + '</td>' +
         '<td class="num col-money">' + moneyInput("labour", l, "price") + '</td>' +
-        '<td class="num col-pct">' + moneyInput("labour", l, "markup") + '</td>' +
         '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
-        '<td class="col-del"><button type="button" class="icon-btn" data-del="labour" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button></td>' +
+        '<td class="col-del">' + (r ? "" : '<button type="button" class="icon-btn" data-del="labour" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>') + '</td>' +
         '</tr>';
     }).join("");
   }
@@ -157,9 +176,6 @@
         return '<option value="' + Q.esc(it.id) + '">' + Q.esc(it.name) + ' – ' + Q.money(it.price) + '/' + Q.esc(it.unit) + '</option>';
       }).join("") + '</optgroup>';
     }).join("");
-    $("labPicker").innerHTML = cat.labourRates.map(function (r) {
-      return '<option value="' + Q.esc(r.id) + '">' + Q.esc(r.name) + ' – ' + Q.money(r.rate) + '/' + Q.esc(r.unit || "Hrs") + '</option>';
-    }).join("") + '<option value="">Custom labour line</option>';
     $("addPicker").innerHTML = cat.addOnPresets.map(function (p) {
       return '<option value="' + Q.esc(p.id) + '">' + Q.esc(p.name) + (Q.num(p.amount) ? ' – ' + Q.money(p.amount) : "") + '</option>';
     }).join("") + '<option value="">Custom add-on</option>';
@@ -257,7 +273,7 @@
     if (!line) return;
     var f = el.getAttribute("data-f");
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
-    if (list === "materials" && f === "qty") {
+    if ((list === "materials" || list === "labour") && f === "qty") {
       var tr = el.closest("tr");
       if (tr) tr.classList.toggle("zero", !Q.num(line.qty));
     }
@@ -351,17 +367,6 @@
     var before = job.materials.length;
     job.materials = job.materials.filter(function (l) { return Q.num(l.qty) !== 0; });
     if (job.materials.length !== before) { rerender("materials"); changed(); }
-  });
-
-  $("labAddBtn").addEventListener("click", function () {
-    var id = $("labPicker").value;
-    var r = state.catalog.labourRates.find(function (x) { return x.id === id; });
-    var line = r
-      ? { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs", qty: 0, cost: Q.num(r.cost), price: Q.num(r.rate), markup: 0 }
-      : { id: Q.uid(), rateId: null, name: "", description: "", unit: "Hrs", qty: 0, cost: 0, price: 0, markup: 0 };
-    job.labour.push(line);
-    rerender("labour"); changed();
-    focusRow(line.id, r ? "qty" : "name");
   });
 
   $("addAddBtn").addEventListener("click", function () {

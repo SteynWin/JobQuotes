@@ -61,10 +61,10 @@
         item("Appliances", "Single oven", "#", 0)
       ],
       labourRates: [
-        { id: uid(), name: "Labour", unit: "Hrs", rate: 160, cost: 60 },
-        { id: uid(), name: "Machining", unit: "Hrs", rate: 80, cost: 40 },
-        { id: uid(), name: "Part Labour", unit: "Hrs", rate: 160, cost: 60 },
-        { id: uid(), name: "Installation", unit: "Hrs", rate: 95, cost: 50 }
+        { id: "fixed-labour", name: "Labour", unit: "Hrs", rate: 160, cost: 60 },
+        { id: "fixed-machining", name: "Machining", unit: "Hrs", rate: 80, cost: 40 },
+        { id: "fixed-assembly", name: "Assembly Labour", unit: "Hrs", rate: 160, cost: 60 },
+        { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 }
       ],
       addOnPresets: [
         { id: uid(), name: "Design", amount: 200 },
@@ -88,13 +88,47 @@
     };
   }
 
+  // The four labour types every job always shows. Matched by name so
+  // existing price lists (with their own ids) are recognised; any that
+  // are missing are added with a fixed id so all devices agree.
+  var FIXED_LABOUR = [
+    { key: "labour", re: /^(labour|labor)$/i, def: { id: "fixed-labour", name: "Labour", unit: "Hrs", rate: 160, cost: 60 } },
+    { key: "machining", re: /^machin/i, def: { id: "fixed-machining", name: "Machining", unit: "Hrs", rate: 80, cost: 40 } },
+    { key: "assembly", re: /^assembl/i, def: { id: "fixed-assembly", name: "Assembly Labour", unit: "Hrs", rate: 160, cost: 60 } },
+    { key: "installation", re: /^install/i, def: { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 } }
+  ];
+  function fixedLabourKey(rate) {
+    var name = String(rate.name || "").trim();
+    for (var i = 0; i < FIXED_LABOUR.length; i++) {
+      if (rate.id === FIXED_LABOUR[i].def.id || FIXED_LABOUR[i].re.test(name)) return FIXED_LABOUR[i].key;
+    }
+    return null;
+  }
+  // Fixed types first (in the standard order), then any extra types.
+  function orderedLabourRates(rates) {
+    var fixed = [], extra = [];
+    FIXED_LABOUR.forEach(function (f) {
+      var r = rates.find(function (x) { return fixedLabourKey(x) === f.key; });
+      if (r) fixed.push(r);
+    });
+    rates.forEach(function (r) { if (fixed.indexOf(r) === -1) extra.push(r); });
+    return fixed.concat(extra);
+  }
+  function ensureFixedLabour(rates) {
+    rates = rates.slice();
+    FIXED_LABOUR.forEach(function (f) {
+      if (!rates.some(function (r) { return fixedLabourKey(r) === f.key; })) rates.push(Object.assign({}, f.def));
+    });
+    return orderedLabourRates(rates);
+  }
+
   function normaliseCatalog(c) {
     var d = defaultCatalog();
     c = c || {};
     return {
       categories: Array.isArray(c.categories) ? c.categories : d.categories,
       items: Array.isArray(c.items) ? c.items : d.items,
-      labourRates: Array.isArray(c.labourRates) ? c.labourRates : d.labourRates,
+      labourRates: ensureFixedLabour(Array.isArray(c.labourRates) ? c.labourRates : d.labourRates),
       addOnPresets: Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets,
       settings: Object.assign({}, d.settings, c.settings || {}),
       rev: c.rev || null
@@ -410,6 +444,7 @@
     todayISO: todayISO, fmtDate: fmtDate, addDaysISO: addDaysISO, param: param,
     STATUSES: STATUSES, calcJob: calcJob, lineSell: lineSell, lineCost: lineCost,
     newJob: newJob, defaultCatalog: defaultCatalog, normaliseCatalog: normaliseCatalog,
+    fixedLabourKey: fixedLabourKey,
     renderChrome: renderChrome, setSyncStatus: setSyncStatus, debounce: debounce,
     downloadFile: downloadFile, toCSV: toCSV, parseCSV: parseCSV, clone: clone
   };

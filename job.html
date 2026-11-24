@@ -106,11 +106,8 @@
             <thead>
               <tr>
                 <th>Labour type</th>
-                <th>Description</th>
                 <th class="num col-qty">Hours</th>
-                <th class="num col-money">Cost / hr</th>
                 <th class="num col-money">Rate / hr</th>
-                <th class="num col-pct">Markup %</th>
                 <th class="num col-total">Total</th>
                 <th class="col-del"></th>
               </tr>
@@ -118,10 +115,7 @@
             <tbody id="labBody"></tbody>
           </table>
         </div>
-        <div class="add-row">
-          <select id="labPicker" class="q-input"></select>
-          <button type="button" class="small-btn" id="labAddBtn">+ Add labour</button>
-        </div>
+        <p class="hint" style="margin:10px 0 0">Enter the hours for each type. Change the standard rates, or add more labour types, on the <a href="labour.html">Labour Rates</a> page.</p>
       </section>
 
       <section class="card">
@@ -195,7 +189,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=1"></script>
-<script src="job.js?v=1"></script>
+<script src="common.js?v=2"></script>
+<script src="job.js?v=2"></script>
 </body>
 </html>
