@@ -91,41 +91,63 @@
     tbody.innerHTML = html;
   }
 
-  // Every labour type from the Labour Rates page always has a row (hours
-  // start at 0). Lines from types that have since been removed stay
-  // visible, with a remove button, so nothing on an old quote disappears.
+  // Labour has two parts:
+  //  - the four STANDARD types (Labour, Machining, Assembly, Installation):
+  //    always shown on every job, at the rate set on the Labour Rates page
+  //    (not editable here). Once a job is Accepted or later its rates are
+  //    frozen, so changing your rates never alters work already agreed.
+  //  - OTHER labour added to this job only (e.g. Sanding, Cleaning), with
+  //    its own name, hours and rate, and a remove button.
+  var FROZEN = { "Accepted": 1, "In Progress": 1, "Completed": 1 };
+  function isStandard(l) {
+    var r = state.catalog.labourRates.find(function (x) { return x.id === l.rateId; });
+    return !!(r && Q.fixedLabourKey(r));
+  }
   function syncLabourLines() {
-    state.catalog.labourRates.forEach(function (r) {
-      if (job.labour.some(function (l) { return l.rateId === r.id; })) return;
-      // Older jobs may have this type without a rateId: match by name.
-      var byName = job.labour.find(function (l) {
-        return !l.rateId && String(l.name).trim().toLowerCase() === String(r.name).trim().toLowerCase();
-      });
-      if (byName) { byName.rateId = r.id; return; }
-      job.labour.push({ id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs",
-        qty: 0, cost: Q.num(r.cost), price: Q.num(r.rate), markup: 0 });
+    var before = JSON.stringify(job.labour);
+    var standard = state.catalog.labourRates.filter(function (r) { return Q.fixedLabourKey(r); });
+    standard.forEach(function (r) {
+      var line = job.labour.find(function (l) { return l.rateId === r.id; }) ||
+        job.labour.find(function (l) {
+          return !l.rateId && String(l.name).trim().toLowerCase() === String(r.name).trim().toLowerCase();
+        });
+      if (!line) {
+        line = { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: r.unit || "Hrs", qty: 0, cost: 0, price: 0, markup: 0 };
+        job.labour.push(line);
+      }
+      line.rateId = r.id;
+      if (!FROZEN[job.status]) {
+        line.name = r.name; line.price = Q.num(r.rate); line.cost = Q.num(r.cost); line.markup = 0;
+      }
     });
-    var order = state.catalog.labourRates.map(function (r) { return r.id; });
+    var order = standard.map(function (r) { return r.id; });
     job.labour.sort(function (a, b) {
       var ia = order.indexOf(a.rateId), ib = order.indexOf(b.rateId);
       return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
     });
+    return JSON.stringify(job.labour) !== before;
+  }
+  // Earlier versions auto-added a 0-hour row for every labour type; drop
+  // those empty non-standard rows once, when the job is loaded.
+  function dropEmptyAutoLabour() {
+    job.labour = job.labour.filter(function (l) {
+      return isStandard(l) || Q.num(l.qty) !== 0 || !l.rateId;
+    });
   }
 
   function renderLabour() {
-    syncLabourLines();
+    // If the standard rates changed (or a row was added), save it so the
+    // printed quote uses the same numbers shown here.
+    if (syncLabourLines()) changed();
     var tbody = $("labBody");
-    var known = {};
-    state.catalog.labourRates.forEach(function (r) { known[r.id] = r; });
     tbody.innerHTML = job.labour.map(function (l) {
-      var r = known[l.rateId];
-      var label = r ? r.name : (l.name || "Labour");
+      var std = isStandard(l);
       return '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
-        '<td><strong>' + Q.esc(label) + '</strong>' + (r ? "" : ' <span class="muted">(no longer on Labour Rates)</span>') + '</td>' +
+        '<td>' + (std ? '<strong>' + Q.esc(l.name) + '</strong>' : textInput("labour", l, "name", "e.g. Sanding")) + '</td>' +
         '<td class="num col-qty">' + moneyInput("labour", l, "qty") + '</td>' +
-        '<td class="num col-money">' + moneyInput("labour", l, "price") + '</td>' +
+        '<td class="num col-money">' + (std ? Q.money(l.price) : moneyInput("labour", l, "price")) + '</td>' +
         '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
-        '<td class="col-del">' + (r ? "" : '<button type="button" class="icon-btn" data-del="labour" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>') + '</td>' +
+        '<td class="col-del">' + (std ? "" : '<button type="button" class="icon-btn" data-del="labour" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>') + '</td>' +
         '</tr>';
     }).join("");
   }
@@ -176,6 +198,9 @@
         return '<option value="' + Q.esc(it.id) + '">' + Q.esc(it.name) + ' – ' + Q.money(it.price) + '/' + Q.esc(it.unit) + '</option>';
       }).join("") + '</optgroup>';
     }).join("");
+    $("labPicker").innerHTML = cat.labourRates.filter(function (r) { return !Q.fixedLabourKey(r); }).map(function (r) {
+      return '<option value="' + Q.esc(r.id) + '">' + Q.esc(r.name) + ' – ' + Q.money(r.rate) + '/hr</option>';
+    }).join("") + '<option value="">Other (type a name)</option>';
     $("addPicker").innerHTML = cat.addOnPresets.map(function (p) {
       return '<option value="' + Q.esc(p.id) + '">' + Q.esc(p.name) + (Q.num(p.amount) ? ' – ' + Q.money(p.amount) : "") + '</option>';
     }).join("") + '<option value="">Custom add-on</option>';
@@ -258,6 +283,7 @@
       job[el.getAttribute("data-field")] = el.value;
       if (el.id === "f_name") { $("jobTitle").textContent = el.value || "New job"; }
       if (el.id === "f_quoteNo") { $("quoteNoLabel").textContent = el.value; }
+      if (el.id === "f_status") { renderLabour(); updateNumbers(); }
       changed();
     });
   });
@@ -369,6 +395,18 @@
     if (job.materials.length !== before) { rerender("materials"); changed(); }
   });
 
+  $("labAddBtn").addEventListener("click", function () {
+    var r = state.catalog.labourRates.find(function (x) { return x.id === $("labPicker").value; });
+    var std = state.catalog.labourRates.find(function (x) { return Q.fixedLabourKey(x) === "labour"; });
+    var line = r
+      ? { id: Q.uid(), rateId: r.id, name: r.name, description: "", unit: "Hrs", qty: 0, cost: Q.num(r.cost), price: Q.num(r.rate), markup: 0 }
+      : { id: Q.uid(), rateId: null, name: "", description: "", unit: "Hrs", qty: 0,
+          cost: std ? Q.num(std.cost) : 0, price: std ? Q.num(std.rate) : 0, markup: 0 };
+    job.labour.push(line);
+    rerender("labour"); changed();
+    focusRow(line.id, r ? "qty" : "name");
+  });
+
   $("addAddBtn").addEventListener("click", function () {
     var id = $("addPicker").value;
     var p = state.catalog.addOnPresets.find(function (x) { return x.id === id; });
@@ -432,9 +470,11 @@
       // Ignore the echo of our own save, and don't clobber unsaved typing.
       if (job && (dirty || incoming.rev === lastRev)) {
         renderPickers();
+        if (!dirty) { renderLabour(); updateNumbers(); }
         return;
       }
       job = normaliseJob(Q.clone(incoming));
+      dropEmptyAutoLabour();
       renderAll();
       if (firstRender) {
         firstRender = false;

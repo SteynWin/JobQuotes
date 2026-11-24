@@ -115,7 +115,11 @@
             <tbody id="labBody"></tbody>
           </table>
         </div>
-        <p class="hint" style="margin:10px 0 0">Enter the hours for each type. Change the standard rates, or add more labour types, on the <a href="labour.html">Labour Rates</a> page.</p>
+        <div class="add-row">
+          <select id="labPicker" class="q-input"></select>
+          <button type="button" class="small-btn" id="labAddBtn">+ Add other labour</button>
+        </div>
+        <p class="hint" style="margin:10px 0 0">Enter the hours for each type. The standard rates are set on the <a href="labour.html">Labour Rates</a> page. Add other labour, such as sanding or cleaning, for this job only.</p>
       </section>
 
       <section class="card">
@@ -189,7 +193,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=2"></script>
-<script src="job.js?v=2"></script>
+<script src="common.js?v=3"></script>
+<script src="job.js?v=3"></script>
 </body>
 </html>

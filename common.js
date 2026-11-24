@@ -64,7 +64,9 @@
         { id: "fixed-labour", name: "Labour", unit: "Hrs", rate: 160, cost: 60 },
         { id: "fixed-machining", name: "Machining", unit: "Hrs", rate: 80, cost: 40 },
         { id: "fixed-assembly", name: "Assembly Labour", unit: "Hrs", rate: 160, cost: 60 },
-        { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 }
+        { id: "fixed-installation", name: "Installation Labour", unit: "Hrs", rate: 95, cost: 50 },
+        { id: uid(), name: "Sanding", unit: "Hrs", rate: 90, cost: 45 },
+        { id: uid(), name: "Cleaning", unit: "Hrs", rate: 70, cost: 35 }
       ],
       addOnPresets: [
         { id: uid(), name: "Design", amount: 200 },
