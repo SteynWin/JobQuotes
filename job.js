@@ -640,18 +640,6 @@
     setTimeout(go, 1200);
   });
 
-  $("dupJobBtn").addEventListener("click", function () {
-    flush();
-    var copy = Q.clone(job);
-    var fresh = Q.newJob(state.catalog);
-    copy.id = fresh.id; copy.quoteNo = fresh.quoteNo; copy.status = "Draft"; copy.date = fresh.date;
-    copy.name = (job.name || "Job") + " (copy)"; copy.expenses = []; copy.createdAt = Date.now(); copy.rev = null;
-    var cat = Q.clone(state.catalog);
-    cat.settings.nextQuoteNumber = (Q.num(cat.settings.nextQuoteNumber) || 1) + 1;
-    QuoteStore.saveCatalog(cat);
-    QuoteStore.saveJob(copy);
-    saveThenGo("job.html?id=" + encodeURIComponent(copy.id));
-  });
 
   // ------------------------------------------------------------------ load
   function normaliseJob(j) {

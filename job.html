@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "6";
+    var APP_VERSION = "7";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -224,7 +224,6 @@
       <table class="summary-table" id="summaryTable"></table>
       <div class="summary-actions">
         <a class="primary-btn" id="viewQuoteBtn" href="#" style="text-align:center;text-decoration:none">View / print quote</a>
-        <button type="button" class="ghost-btn" id="dupJobBtn">Duplicate job</button>
         <button type="button" class="ghost-btn" id="delJobBtn" style="color:var(--danger)">Delete job</button>
       </div>
       <div class="save-state" id="saveState"></div>
@@ -240,6 +239,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=23"></script>
-<script src="job.js?v=23"></script>
+<script src="job.js?v=24"></script>
 </body>
 </html>
