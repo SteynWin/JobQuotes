@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "2";
+    var APP_VERSION = "3";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -30,7 +30,7 @@
 </script>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=12">
+<link rel="stylesheet" href="quotes.css?v=20">
 </head>
 <body>
 
@@ -86,10 +86,10 @@
 
   <section class="card">
     <div class="toolbar"><h2 class="card-title">Add-on presets</h2></div>
-    <p class="hint">Quick fixed charges you can add to a job, such as Design and Delivery.</p>
+    <p class="hint">Fixed charges for jobs. <strong>Design</strong> (🔒) shows on every job at this charge and can be ticked on or off per job. Others, such as Delivery, can be added to a job when needed.</p>
     <div class="table-scroll">
       <table class="q-table">
-        <thead><tr><th>Add-on</th><th class="num col-money">Default charge</th><th class="col-del"></th></tr></thead>
+        <thead><tr><th>Add-on</th><th class="num col-money">Your cost</th><th class="num col-money">Charge</th><th class="col-del"></th></tr></thead>
         <tbody id="presetBody"></tbody>
       </table>
     </div>
@@ -104,7 +104,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=8"></script>
-<script src="labour.js?v=6"></script>
+<script src="common.js?v=20"></script>
+<script src="labour.js?v=20"></script>
 </body>
 </html>

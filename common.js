@@ -70,7 +70,7 @@
         { id: uid(), name: "Cleaning", unit: "Hrs", rate: 70, cost: 35 }
       ],
       addOnPresets: [
-        { id: uid(), name: "Design", amount: 200 },
+        { id: "fixed-design", name: "Design", amount: 200, cost: 0 },
         { id: uid(), name: "Delivery", amount: 100 },
         { id: uid(), name: "Install", amount: 0 }
       ],
@@ -126,6 +126,29 @@
     return orderedLabourRates(rates);
   }
 
+  // Add-ons that show on every job (currently just Design). Matched by name
+  // so an existing "Design" preset is recognised; added if missing.
+  var FIXED_ADDONS = [
+    { key: "design", re: /^design/i, def: { id: "fixed-design", name: "Design", amount: 200, cost: 0 } }
+  ];
+  function fixedAddOnKey(p) {
+    var name = String(p.name || "").trim();
+    for (var i = 0; i < FIXED_ADDONS.length; i++) {
+      if (p.id === FIXED_ADDONS[i].def.id || FIXED_ADDONS[i].re.test(name)) return FIXED_ADDONS[i].key;
+    }
+    return null;
+  }
+  function ensureFixedAddOns(presets) {
+    presets = presets.slice();
+    var fixed = [];
+    FIXED_ADDONS.forEach(function (f) {
+      var p = presets.find(function (x) { return fixedAddOnKey(x) === f.key; });
+      if (!p) { p = Object.assign({}, f.def); presets.push(p); }
+      fixed.push(p);
+    });
+    return fixed.concat(presets.filter(function (p) { return fixed.indexOf(p) === -1; }));
+  }
+
   function normaliseCatalog(c) {
     var d = defaultCatalog();
     c = c || {};
@@ -133,8 +156,8 @@
       categories: Array.isArray(c.categories) ? c.categories : d.categories,
       items: Array.isArray(c.items) ? c.items : d.items,
       labourRates: ensureFixedLabour(Array.isArray(c.labourRates) ? c.labourRates : d.labourRates),
-      addOnPresets: (Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets)
-        .filter(function (p) { return !/^cutter/i.test(String(p.name || "").trim()); }),
+      addOnPresets: ensureFixedAddOns((Array.isArray(c.addOnPresets) ? c.addOnPresets : d.addOnPresets)
+        .filter(function (p) { return !/^cutter/i.test(String(p.name || "").trim()); })),
       settings: Object.assign({}, d.settings, c.settings || {}),
       rev: c.rev || null
     };
@@ -311,7 +334,10 @@
     (job.labour || []).forEach(function (l) {
       labour += lineSell(l); labourCost += lineCost(l); if (/^(hrs?|hours?)$/i.test(l.unit || "Hrs")) hours += num(l.qty);
     });
-    (job.addOns || []).forEach(function (a) { addOns += num(a.amount); addOnsCost += num(a.cost); });
+    (job.addOns || []).forEach(function (a) {
+      if (a.included === false) return;   // a permanent add-on switched off for this job
+      addOns += num(a.amount); addOnsCost += num(a.cost);
+    });
     var itemsTotal = materials + labour + addOns;
     var margin = itemsTotal * num(job.marginPct) / 100;
     // Variations: extra costs logged on the job. "amount" is what it costs
@@ -453,6 +479,7 @@
     STATUSES: STATUSES, calcJob: calcJob, lineSell: lineSell, lineCost: lineCost,
     newJob: newJob, defaultCatalog: defaultCatalog, normaliseCatalog: normaliseCatalog,
     fixedLabourKey: fixedLabourKey,
+    fixedAddOnKey: fixedAddOnKey,
     renderChrome: renderChrome, setSyncStatus: setSyncStatus, debounce: debounce,
     downloadFile: downloadFile, toCSV: toCSV, parseCSV: parseCSV, clone: clone
   };

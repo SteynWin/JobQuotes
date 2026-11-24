@@ -54,7 +54,7 @@
           unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k };
       }) });
     }
-    var adds = (job.addOns || []).filter(function (a) { return Q.num(a.amount) !== 0; });
+    var adds = (job.addOns || []).filter(function (a) { return Q.num(a.amount) !== 0 && a.included !== false; });
     if (adds.length) {
       sections.push({ name: "Additional items", rows: adds.map(function (a) {
         return { name: a.name, desc: "", qty: 1, unit: "", unitPrice: Q.num(a.amount) * k };

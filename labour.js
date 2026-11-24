@@ -40,8 +40,10 @@
     $("presetBody").innerHTML = catalog.addOnPresets.length ? catalog.addOnPresets.map(function (p) {
       return '<tr>' +
         '<td>' + inp("addOnPresets", p, "name", "text") + '</td>' +
+        '<td class="num col-money">' + inp("addOnPresets", p, "cost", "number") + '</td>' +
         '<td class="num col-money">' + inp("addOnPresets", p, "amount", "number") + '</td>' +
-        '<td class="col-del"><button type="button" class="icon-btn" data-del="addOnPresets" data-id="' + Q.esc(p.id) + '">&times;</button></td>' +
+        '<td class="col-del">' + (Q.fixedAddOnKey(p) ? '<span class="muted" title="Shows on every job">🔒</span>' :
+          '<button type="button" class="icon-btn" data-del="addOnPresets" data-id="' + Q.esc(p.id) + '">&times;</button>') + '</td>' +
         '</tr>';
     }).join("") : '<tr><td colspan="3" class="empty-note">No presets.</td></tr>';
   }
@@ -75,7 +77,7 @@
     addAndFocus("labourRates", { id: Q.uid(), name: "", unit: "Hrs", rate: 0, cost: 0 });
   });
   $("presetAddBtn").addEventListener("click", function () {
-    addAndFocus("addOnPresets", { id: Q.uid(), name: "", amount: 0 });
+    addAndFocus("addOnPresets", { id: Q.uid(), name: "", amount: 0, cost: 0 });
   });
 
   QuoteStore.init({

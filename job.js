@@ -260,13 +260,53 @@
     }).join("");
   }
 
+  // Permanent add-ons (Design) always have a row on every job, at the
+  // charge/cost set on the Labour Rates page, with a tick box to include
+  // or leave it out for this job. Other add-ons are added and edited here.
+  function isFixedAddOn(a) {
+    var p = state.catalog.addOnPresets.find(function (x) { return x.id === a.presetId; });
+    return !!(p && Q.fixedAddOnKey(p));
+  }
+  function syncAddOns() {
+    var before = JSON.stringify(job.addOns);
+    var fixed = state.catalog.addOnPresets.filter(function (p) { return Q.fixedAddOnKey(p); });
+    fixed.forEach(function (p) {
+      var line = job.addOns.find(function (a) { return a.presetId === p.id; }) ||
+        job.addOns.find(function (a) { return !a.presetId && Q.fixedAddOnKey({ name: a.name }) === Q.fixedAddOnKey(p); });
+      if (!line) {
+        // New and draft jobs include it; older quotes aren't changed silently.
+        line = { id: Q.uid(), presetId: p.id, name: p.name, cost: 0, amount: 0, included: job.status === "Draft" };
+        job.addOns.push(line);
+      }
+      line.presetId = p.id;
+      if (line.included === undefined) line.included = true;
+      if (!FROZEN[job.status]) { line.name = p.name; line.amount = Q.num(p.amount); line.cost = Q.num(p.cost); }
+    });
+    var order = fixed.map(function (p) { return p.id; });
+    job.addOns.sort(function (a, b) {
+      var ia = order.indexOf(a.presetId), ib = order.indexOf(b.presetId);
+      return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
+    });
+    return JSON.stringify(job.addOns) !== before;
+  }
+
   function renderAddOns() {
+    if (syncAddOns()) changed();
     var tbody = $("addBody");
     if (!job.addOns.length) {
       tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No add-ons.</td></tr>';
       return;
     }
     tbody.innerHTML = job.addOns.map(function (a) {
+      if (isFixedAddOn(a)) {
+        var on = a.included !== false;
+        return '<tr data-row="' + Q.esc(a.id) + '"' + (on ? "" : ' class="zero"') + '>' +
+          '<td><label class="include-toggle"><input type="checkbox" data-list="addOns" data-id="' + Q.esc(a.id) + '" data-f="included"' +
+            (on ? " checked" : "") + '> <strong>' + Q.esc(a.name) + '</strong> <span class="muted">' + (on ? "(included)" : "(not included)") + '</span></label></td>' +
+          '<td class="num col-money">' + Q.money(a.cost) + '</td>' +
+          '<td class="num col-money">' + Q.money(a.amount) + '</td>' +
+          '<td class="col-del"></td></tr>';
+      }
       return '<tr data-row="' + Q.esc(a.id) + '">' +
         '<td>' + textInput("addOns", a, "name") + '</td>' +
         '<td class="num col-money">' + moneyInput("addOns", a, "cost") + '</td>' +
@@ -308,7 +348,7 @@
     }).join("") : '<option value="">No other labour types – add them in Settings</option>';
     $("labPicker").disabled = !others.length;
     $("labAddBtn").disabled = !others.length;
-    $("addPicker").innerHTML = cat.addOnPresets.map(function (p) {
+    $("addPicker").innerHTML = cat.addOnPresets.filter(function (p) { return !Q.fixedAddOnKey(p); }).map(function (p) {
       return '<option value="' + Q.esc(p.id) + '">' + Q.esc(p.name) + (Q.num(p.amount) ? ' – ' + Q.money(p.amount) : "") + '</option>';
     }).join("") + '<option value="">Custom add-on</option>';
   }
@@ -395,7 +435,7 @@
       job[el.getAttribute("data-field")] = el.value;
       if (el.id === "f_name") { $("jobTitle").textContent = el.value || "New job"; }
       if (el.id === "f_quoteNo") { $("quoteNoLabel").textContent = el.value; }
-      if (el.id === "f_status") { renderMaterials(); renderLabour(); updateNumbers(); }
+      if (el.id === "f_status") { renderMaterials(); renderLabour(); renderAddOns(); updateNumbers(); }
       changed();
     });
   });
@@ -410,6 +450,11 @@
     var line = job[list].find(function (l) { return l.id === el.getAttribute("data-id"); });
     if (!line) return;
     var f = el.getAttribute("data-f");
+    if (el.type === "checkbox") {
+      line[f] = el.checked;
+      rerender(list); changed();
+      return;
+    }
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
     if (list === "materials" && f === "cost") line.price = line.cost;
     if (list === "materials" && f === "category") { rerender("materials"); changed(); return; }
@@ -423,7 +468,7 @@
   });
   $("jobLayout").addEventListener("change", function (e) {
     // <select> in expenses fires change, not always input
-    if (e.target.tagName === "SELECT" && e.target.getAttribute("data-list")) {
+    if ((e.target.tagName === "SELECT" || e.target.type === "checkbox") && e.target.getAttribute("data-list")) {
       e.target.dispatchEvent(new Event("input", { bubbles: true }));
     }
   });
@@ -547,7 +592,7 @@
   $("addAddBtn").addEventListener("click", function () {
     var id = $("addPicker").value;
     var p = state.catalog.addOnPresets.find(function (x) { return x.id === id; });
-    var a = { id: Q.uid(), name: p ? p.name : "", cost: 0, amount: p ? Q.num(p.amount) : 0 };
+    var a = { id: Q.uid(), name: p ? p.name : "", cost: p ? Q.num(p.cost) : 0, amount: p ? Q.num(p.amount) : 0 };
     job.addOns.push(a);
     rerender("addOns"); changed();
     focusRow(a.id, p ? "amount" : "name");
@@ -607,7 +652,7 @@
       // Ignore the echo of our own save, and don't clobber unsaved typing.
       if (job && (dirty || incoming.rev === lastRev)) {
         renderPickers();
-        if (!dirty) { renderMaterials(); renderLabour(); updateNumbers(); }
+        if (!dirty) { renderMaterials(); renderLabour(); renderAddOns(); updateNumbers(); }
         return;
       }
       job = normaliseJob(Q.clone(incoming));
