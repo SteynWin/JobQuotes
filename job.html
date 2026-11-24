@@ -4,6 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Job – Job Quotes</title>
+<script>
+  /* Auto-update: GitHub Pages lets browsers keep this page for ~10 min, so
+     after an update people could see an old copy. Ask the server (never
+     cached) which version is current; if this page is older, reload it
+     once with a fresh URL. Bump APP_VERSION here and in version.json on
+     every release (bump-version.sh does both). */
+  (function () {
+    var APP_VERSION = "2";
+    try {
+      fetch("version.json?t=" + Date.now(), { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.v || String(d.v) === APP_VERSION) return;
+          var key = "jq_reloaded_" + d.v;
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, "1");
+          var u = new URL(location.href);
+          u.searchParams.set("_v", d.v);
+          location.replace(u.toString());
+        })
+        .catch(function () {});
+    } catch (e) {}
+  })();
+</script>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
 <link rel="stylesheet" href="quotes.css?v=12">
