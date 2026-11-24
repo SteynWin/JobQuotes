@@ -314,18 +314,21 @@
     (job.addOns || []).forEach(function (a) { addOns += num(a.amount); addOnsCost += num(a.cost); });
     var itemsTotal = materials + labour + addOns;
     var margin = itemsTotal * num(job.marginPct) / 100;
-    var subtotal = itemsTotal + margin;
+    // Variations: extra costs logged on the job. "amount" is what it costs
+    // you; "charge" is what the client pays for it (0 = you absorb it).
+    // Charges are priced already, so they're added after the margin.
+    var actual = 0, variations = 0;
+    (job.expenses || []).forEach(function (e) { actual += num(e.amount); variations += num(e.charge); });
+    var subtotal = itemsTotal + margin + variations;
     var tax = subtotal * num(job.taxPct) / 100;
     var total = subtotal + tax;
     var deposit = total * num(job.depositPct) / 100;
     var cost = materialsCost + labourCost + addOnsCost;
-    var actual = 0;
-    (job.expenses || []).forEach(function (e) { actual += num(e.amount); });
     return {
       materials: round2(materials), materialsCost: round2(materialsCost),
       labour: round2(labour), labourCost: round2(labourCost), hours: round2(hours),
       addOns: round2(addOns), addOnsCost: round2(addOnsCost),
-      itemsTotal: round2(itemsTotal), margin: round2(margin), subtotal: round2(subtotal),
+      itemsTotal: round2(itemsTotal), margin: round2(margin), variations: round2(variations), subtotal: round2(subtotal),
       tax: round2(tax), total: round2(total), deposit: round2(deposit),
       balance: round2(total - deposit),
       cost: round2(cost), profit: round2(subtotal - cost),

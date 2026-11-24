@@ -145,9 +145,9 @@
       <section class="card">
         <div class="toolbar">
           <h2 class="card-title">Extra costs and variations</h2>
-          <span class="section-total">Total <strong id="expTotal">$0.00</strong> <span class="muted">(estimated job cost <span id="expBudget">$0.00</span>)</span></span>
+          <span class="section-total">Your cost <strong id="expTotal">$0.00</strong> · Charged to client <strong id="expCharge">$0.00</strong></span>
         </div>
-        <p class="hint">Log extra costs and variations as the job runs (supplier invoices, extra wages, changes on site) to see how they affect your profit. Not shown on the quote.</p>
+        <p class="hint">Log extra costs and variations as the job runs (supplier invoices, extra wages, changes on site). <strong>Your cost</strong> counts against your profit. Anything in <strong>Charge client</strong> is added to the quote under <strong>Variations</strong>; leave it at 0 if you're absorbing the cost.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -155,7 +155,8 @@
                 <th style="width:140px">Date</th>
                 <th style="width:150px">Type</th>
                 <th>Supplier / description</th>
-                <th class="num col-total">Amount</th>
+                <th class="num col-money">Your cost</th>
+                <th class="num col-money">Charge client</th>
                 <th class="col-del"></th>
               </tr>
             </thead>
@@ -188,7 +189,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=7"></script>
-<script src="job.js?v=11"></script>
+<script src="common.js?v=8"></script>
+<script src="job.js?v=12"></script>
 </body>
 </html>

@@ -23,7 +23,8 @@ The access code is **3622**. To change it, edit `ACCESS_CODE` in `access-gate.js
   Delivery…). The summary works out items total → margin % → subtotal → GST →
   total → deposit / balance, the same structure as Mozaik's pricing template,
   plus estimated cost and profit. Log supplier invoices, extra wages and
-  site changes under **Extra costs and variations** to see their effect on profit.
+  site changes under **Extra costs and variations**. Each has your cost and an optional
+  client charge; charged variations are added to the quote under **Variations**.
 - **Quote**: a printable client quote, also downloadable as a PDF. You choose
   what the client sees: every item, quantities only, category totals, or just
   the total. The margin can be spread into the prices or shown as its own line.

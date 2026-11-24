@@ -279,7 +279,7 @@
   function renderExpenses() {
     var tbody = $("expBody");
     if (!job.expenses.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No costs logged yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-note">No extra costs or variations yet.</td></tr>';
       return;
     }
     tbody.innerHTML = job.expenses.map(function (x) {
@@ -289,7 +289,8 @@
           EXPENSE_TYPES.map(function (t) { return '<option' + (t === x.type ? " selected" : "") + '>' + Q.esc(t) + '</option>'; }).join("") +
         '</select></td>' +
         '<td>' + textInput("expenses", x, "description", "e.g. Extra benchtop cut-out") + '</td>' +
-        '<td class="num col-total">' + moneyInput("expenses", x, "amount") + '</td>' +
+        '<td class="num col-money">' + moneyInput("expenses", x, "amount") + '</td>' +
+        '<td class="num col-money">' + moneyInput("expenses", x, "charge") + '</td>' +
         '<td class="col-del"><button type="button" class="icon-btn" data-del="expenses" data-id="' + Q.esc(x.id) + '" title="Remove">&times;</button></td>' +
         '</tr>';
     }).join("");
@@ -329,6 +330,7 @@
       row("Materials", "s_mat") + row("Labour", "s_lab") + row("Add-ons", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
+      '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
       '<tr class="strong big"><td>Total</td><td id="s_total"></td></tr>' +
@@ -348,7 +350,7 @@
     var c = Q.calcJob(job);
     var set = function (id, v) { var el = $(id); if (el) el.textContent = v; };
     set("s_mat", Q.money(c.materials)); set("s_lab", Q.money(c.labour)); set("s_add", Q.money(c.addOns));
-    set("s_items", Q.money(c.itemsTotal)); set("s_margin", Q.money(c.margin)); set("s_sub", Q.money(c.subtotal));
+    set("s_items", Q.money(c.itemsTotal)); set("s_margin", Q.money(c.margin)); set("s_var", Q.money(c.variations)); set("s_sub", Q.money(c.subtotal));
     set("s_tax", Q.money(c.tax)); set("s_total", Q.money(c.total)); set("s_dep", Q.money(c.deposit));
     set("s_bal", Q.money(c.balance)); set("s_cost", Q.money(c.cost));
     set("s_profit", Q.money(c.profit) + " (" + c.profitPct.toFixed(1) + "%)");
@@ -358,7 +360,7 @@
     $("s_actprofit").className = !c.actual ? "muted" : (c.actualProfit >= 0 ? "pos" : "neg");
 
     set("matTotal", Q.money(c.materials)); set("labTotal", Q.money(c.labour)); set("labHours", c.hours);
-    set("addTotal", Q.money(c.addOns)); set("expTotal", Q.money(c.actual)); set("expBudget", Q.money(c.cost));
+    set("addTotal", Q.money(c.addOns)); set("expTotal", Q.money(c.actual)); set("expCharge", Q.money(c.variations));
 
     var catTotals = {};
     job.materials.concat(job.labour).forEach(function (l) {
@@ -398,7 +400,7 @@
     });
   });
 
-  var NUMERIC = { qty: 1, cost: 1, price: 1, markup: 1, amount: 1 };
+  var NUMERIC = { qty: 1, cost: 1, price: 1, markup: 1, amount: 1, charge: 1 };
   $("jobLayout").addEventListener("input", function (e) {
     var el = e.target;
     var pct = el.getAttribute("data-pct");
@@ -552,7 +554,7 @@
   });
 
   $("expAddBtn").addEventListener("click", function () {
-    var x = { id: Q.uid(), date: Q.todayISO(), type: "Materials", description: "", amount: "" };
+    var x = { id: Q.uid(), date: Q.todayISO(), type: "Materials", description: "", amount: "", charge: "" };
     job.expenses.push(x);
     rerender("expenses"); changed();
     focusRow(x.id, "description");

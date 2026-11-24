@@ -60,6 +60,14 @@
         return { name: a.name, desc: "", qty: 1, unit: "", unitPrice: Q.num(a.amount) * k };
       }) });
     }
+    // Variations are priced already, so the margin is never spread into them.
+    var vars = (job.expenses || []).filter(function (x) { return Q.num(x.charge) !== 0; });
+    if (vars.length) {
+      sections.push({ name: "Variations", rows: vars.map(function (x) {
+        return { name: x.description || x.type || "Variation", desc: x.date ? Q.fmtDate(x.date) : "", qty: 1, unit: "",
+          unitPrice: Q.num(x.charge) };
+      }) });
+    }
     sections.forEach(function (sec) {
       sec.total = 0;
       sec.rows.forEach(function (r) { r.total = Q.num(r.qty) * r.unitPrice; sec.total += r.total; });
@@ -107,7 +115,8 @@
 
     var tax = s.taxName || "Tax";
     html += '<table class="qp-totals">' +
-      (!fold.checked && c.margin ? tot("Items total", c.itemsTotal) + tot("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) : "") +
+      (!fold.checked && c.margin ? tot("Items total", c.itemsTotal) + tot("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) +
+        (c.variations ? tot("Variations", c.variations) : "") : "") +
       tot("Subtotal", c.subtotal) +
       tot(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +
       '<tr class="qp-grand"><td>Total</td><td>' + Q.money(c.total) + '</td></tr>' +
