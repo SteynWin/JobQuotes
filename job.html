@@ -6,7 +6,7 @@
 <title>Job – Job Quotes</title>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=5">
+<link rel="stylesheet" href="quotes.css?v=6">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
           <h2 class="card-title">Materials &amp; hardware</h2>
           <span class="section-total">Total <strong id="matTotal">$0.00</strong></span>
         </div>
-        <p class="hint">Enter quantities from your Mozaik report. Prices are copied from the Price List when you add an item; change them here for this job only.</p>
+        <p class="hint">Enter quantities from your Mozaik report. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. For something not on the list, use <strong>+ Extra item</strong>, enter its cost and markup, and optionally <strong>Save to list</strong>.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -77,8 +77,8 @@
                 <th class="num col-qty">Qty</th>
                 <th class="col-unit">Unit</th>
                 <th class="num col-money">Cost</th>
-                <th class="num col-money">Price</th>
                 <th class="num col-pct">Markup %</th>
+                <th class="num col-money">Price</th>
                 <th class="num col-total">Total</th>
                 <th class="col-del"></th>
               </tr>
@@ -89,9 +89,8 @@
         <div class="add-row">
           <select id="matPicker" class="q-input"></select>
           <button type="button" class="small-btn" id="matAddBtn">+ Add item</button>
-          <button type="button" class="small-btn" id="matCustomBtn">+ Custom line</button>
+          <button type="button" class="small-btn" id="matCustomBtn">+ Extra item</button>
           <button type="button" class="small-btn" id="matAllBtn" title="Adds every Price List item not already on this job, with qty 0 – like Mozaik's template">+ Whole price list</button>
-          <button type="button" class="small-btn" id="matRefreshBtn" title="Re-copy current Price List prices onto this job">Refresh prices</button>
           <button type="button" class="small-btn danger" id="matClearZeroBtn">Remove zero-qty lines</button>
         </div>
       </section>
@@ -194,6 +193,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=6"></script>
-<script src="job.js?v=6"></script>
+<script src="job.js?v=7"></script>
 </body>
 </html>

@@ -339,3 +339,9 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
 .summary-table td:first-child { white-space: normal; }
 .summary-table td:last-child { white-space: nowrap; padding-left: 8px; }
 .job-layout { grid-template-columns: minmax(0, 1fr) 330px; }
+
+/* Extra (non-price-list) material lines */
+.q-table tr.extra-row td { background: #fffdf8; }
+.q-table .cat-select { margin-top: 4px; font-size: 0.78rem; padding: 4px 6px; color: var(--muted); }
+.q-table td.col-del { white-space: nowrap; }
+.save-item-btn { padding: 4px 8px; font-size: 0.75rem; margin-right: 2px; }

@@ -61,11 +61,52 @@
       '" value="' + Q.esc(line[field]) + '"' + (ph ? ' placeholder="' + Q.esc(ph) + '"' : "") + '>';
   }
 
+  // Materials & hardware has two kinds of line:
+  //  - PRICE LIST items: name, unit and price come from the Price List and
+  //    can't be changed here - only the quantity. No cost/markup shown.
+  //    (Prices follow the Price List until the job is Accepted or later.)
+  //  - EXTRA items added to this job only: name, unit, cost and markup %
+  //    are entered here (price = cost + markup), with a button to save the
+  //    item to the Price List, after which it becomes a price list line.
+  // Extra lines store their cost in both "cost" and "price" and the markup
+  // in "markup", so the shared quote maths (qty x price x (1 + markup%))
+  // gives the marked-up price.
+  function catalogItem(l) {
+    return l.itemId ? state.catalog.items.find(function (x) { return x.id === l.itemId; }) : null;
+  }
+  function syncMaterialLines() {
+    var before = JSON.stringify(job.materials);
+    job.materials.forEach(function (l) {
+      var it = catalogItem(l);
+      if (it) {
+        if (!FROZEN[job.status]) {
+          l.name = it.name; l.description = it.description || ""; l.unit = it.unit; l.category = it.category;
+          l.price = Q.num(it.price); l.cost = Q.num(it.cost); l.markup = 0;
+        }
+      } else if (l.itemId) {
+        // Item was deleted from the Price List: keep the line as an extra
+        // item at the same sell price, expressed as cost + markup.
+        var cost = Q.num(l.cost) || Q.num(l.price);
+        var sell = Q.num(l.price) * (1 + Q.num(l.markup) / 100);
+        l.itemId = null; l.cost = cost; l.price = cost;
+        l.markup = cost ? Q.round2((sell / cost - 1) * 100) : 0;
+      }
+    });
+    return JSON.stringify(job.materials) !== before;
+  }
+
+  function categoryOptions(selected) {
+    var cats = state.catalog.categories.slice();
+    if (selected && cats.indexOf(selected) === -1) cats.push(selected);
+    return cats.map(function (c) { return '<option' + (c === selected ? " selected" : "") + '>' + Q.esc(c) + '</option>'; }).join("");
+  }
+
   function renderMaterials() {
+    if (syncMaterialLines()) changed();
     var tbody = $("matBody");
     var lines = job.materials.slice();
     if (!lines.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No materials yet. Pick an item below, or add the whole price list and type in quantities.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No materials yet. Pick a Price List item below, or add the whole price list and type in quantities.</td></tr>';
       return;
     }
     lines.sort(function (a, b) { return catIndex(a.category) - catIndex(b.category); });
@@ -76,17 +117,33 @@
         html += '<tr class="cat-row"><td colspan="7">' + Q.esc(l.category || "Other") + '</td>' +
           '<td class="num" data-cattotal="' + Q.esc(l.category) + '"></td><td></td></tr>';
       }
-      html += '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
-        '<td>' + textInput("materials", l, "name") + '</td>' +
-        '<td>' + textInput("materials", l, "description") + '</td>' +
-        '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
-        '<td class="col-unit">' + textInput("materials", l, "unit") + '</td>' +
-        '<td class="num col-money">' + moneyInput("materials", l, "cost") + '</td>' +
-        '<td class="num col-money">' + moneyInput("materials", l, "price") + '</td>' +
-        '<td class="num col-pct">' + moneyInput("materials", l, "markup") + '</td>' +
-        '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
-        '<td class="col-del"><button type="button" class="icon-btn" data-del="materials" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button></td>' +
-        '</tr>';
+      var linked = !!catalogItem(l);
+      var del = '<button type="button" class="icon-btn" data-del="materials" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>';
+      if (linked) {
+        html += '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
+          '<td><strong>' + Q.esc(l.name) + '</strong></td>' +
+          '<td class="muted">' + Q.esc(l.description) + '</td>' +
+          '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
+          '<td class="col-unit">' + Q.esc(l.unit) + '</td>' +
+          '<td class="col-money"></td><td class="col-pct"></td>' +
+          '<td class="num col-money">' + Q.money(l.price) + '</td>' +
+          '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
+          '<td class="col-del">' + del + '</td>' +
+          '</tr>';
+      } else {
+        html += '<tr data-row="' + Q.esc(l.id) + '" class="extra-row' + (Q.num(l.qty) ? "" : " zero") + '">' +
+          '<td>' + textInput("materials", l, "name", "Item name") +
+            '<select class="cat-select" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="category" title="Category">' + categoryOptions(l.category) + '</select></td>' +
+          '<td>' + textInput("materials", l, "description", "optional") + '</td>' +
+          '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
+          '<td class="col-unit">' + textInput("materials", l, "unit") + '</td>' +
+          '<td class="num col-money">' + moneyInput("materials", l, "cost") + '</td>' +
+          '<td class="num col-pct">' + moneyInput("materials", l, "markup") + '</td>' +
+          '<td class="num col-money" data-unitprice="' + Q.esc(l.id) + '"></td>' +
+          '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
+          '<td class="col-del"><button type="button" class="small-btn save-item-btn" data-saveitem="' + Q.esc(l.id) + '" title="Save this item to the Price List">Save to list</button>' + del + '</td>' +
+          '</tr>';
+      }
     });
     tbody.innerHTML = html;
   }
@@ -278,6 +335,10 @@
       if (cell) cell.textContent = Q.money(Q.lineSell(l));
       if (l.category != null) catTotals[l.category] = (catTotals[l.category] || 0) + Q.lineSell(l);
     });
+    job.materials.forEach(function (l) {
+      var cell = document.querySelector('[data-unitprice="' + cssEsc(l.id) + '"]');
+      if (cell) cell.textContent = Q.money(Q.num(l.price) * (1 + Q.num(l.markup) / 100));
+    });
     document.querySelectorAll("[data-cattotal]").forEach(function (el) {
       el.textContent = Q.money(catTotals[el.getAttribute("data-cattotal")] || 0);
     });
@@ -301,7 +362,7 @@
       job[el.getAttribute("data-field")] = el.value;
       if (el.id === "f_name") { $("jobTitle").textContent = el.value || "New job"; }
       if (el.id === "f_quoteNo") { $("quoteNoLabel").textContent = el.value; }
-      if (el.id === "f_status") { renderLabour(); updateNumbers(); }
+      if (el.id === "f_status") { renderMaterials(); renderLabour(); updateNumbers(); }
       changed();
     });
   });
@@ -317,6 +378,8 @@
     if (!line) return;
     var f = el.getAttribute("data-f");
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
+    if (list === "materials" && f === "cost") line.price = line.cost;
+    if (list === "materials" && f === "category") { rerender("materials"); changed(); return; }
     if ((list === "materials" || list === "labour") && f === "qty") {
       var tr = el.closest("tr");
       if (tr) tr.classList.toggle("zero", !Q.num(line.qty));
@@ -332,6 +395,8 @@
   });
 
   $("jobLayout").addEventListener("click", function (e) {
+    var save = e.target.closest("[data-saveitem]");
+    if (save) { saveToPriceList(save.getAttribute("data-saveitem")); return; }
     var btn = e.target.closest("[data-del]");
     if (!btn) return;
     var list = btn.getAttribute("data-del");
@@ -371,10 +436,41 @@
   $("matPicker").addEventListener("change", function () { $("matAddBtn").click(); });
   $("matCustomBtn").addEventListener("click", function () {
     var line = { id: Q.uid(), itemId: null, category: "Other", name: "", description: "", unit: "#", qty: 1, cost: 0, price: 0, markup: 0 };
+    if (state.catalog.categories.indexOf("Other") === -1 && state.catalog.categories.length) line.category = state.catalog.categories[0];
     job.materials.push(line);
     rerender("materials"); changed();
     focusRow(line.id, "name");
   });
+
+  function saveToPriceList(lineId) {
+    var l = job.materials.find(function (x) { return x.id === lineId; });
+    if (!l) return;
+    var name = String(l.name || "").trim();
+    if (!name) { alert("Give the item a name first."); focusRow(l.id, "name"); return; }
+    var cat = Q.clone(state.catalog);
+    var price = Q.round2(Q.num(l.cost) * (1 + Q.num(l.markup) / 100));
+    var existing = cat.items.find(function (it) {
+      return it.category === l.category && String(it.name).trim().toLowerCase() === name.toLowerCase();
+    });
+    if (existing) {
+      if (!confirm('"' + name + '" is already in the Price List under ' + l.category + ' at ' + Q.money(existing.price) +
+        '. Update it to cost ' + Q.money(l.cost) + ', price ' + Q.money(price) + '?')) return;
+      existing.cost = Q.num(l.cost); existing.price = price; existing.unit = l.unit || existing.unit;
+      if (l.description) existing.description = l.description;
+    } else {
+      existing = { id: Q.uid(), category: l.category || "Other", name: name, description: l.description || "",
+        unit: l.unit || "#", cost: Q.num(l.cost), price: price };
+      if (cat.categories.indexOf(existing.category) === -1) cat.categories.push(existing.category);
+      cat.items.push(existing);
+    }
+    cat.rev = Q.uid();
+    state.catalog = cat;
+    QuoteStore.saveCatalog(cat);
+    l.itemId = existing.id;
+    renderPickers();
+    rerender("materials"); changed();
+    saveStateEl.textContent = '"' + name + '" saved to the Price List';
+  }
   $("matAllBtn").addEventListener("click", function () {
     var have = {};
     job.materials.forEach(function (l) { if (l.itemId) have[l.itemId] = 1; });
@@ -386,26 +482,6 @@
     });
     rerender("materials");
     if (added) changed();
-  });
-  $("matRefreshBtn").addEventListener("click", function () {
-    var byId = {};
-    state.catalog.items.forEach(function (it) { byId[it.id] = it; });
-    var n = 0;
-    job.materials.forEach(function (l) {
-      var it = byId[l.itemId];
-      if (it && (Q.num(l.price) !== Q.num(it.price) || Q.num(l.cost) !== Q.num(it.cost))) {
-        l.price = Q.num(it.price); l.cost = Q.num(it.cost); n++;
-      }
-    });
-    job.labour.forEach(function (l) {
-      var r = state.catalog.labourRates.find(function (x) { return x.id === l.rateId; });
-      if (r && (Q.num(l.price) !== Q.num(r.rate) || Q.num(l.cost) !== Q.num(r.cost))) {
-        l.price = Q.num(r.rate); l.cost = Q.num(r.cost); n++;
-      }
-    });
-    rerender("materials"); rerender("labour");
-    if (n) changed();
-    saveStateEl.textContent = n ? n + " line(s) updated to current prices" : "Prices already up to date";
   });
   $("matClearZeroBtn").addEventListener("click", function () {
     var before = job.materials.length;
@@ -486,7 +562,7 @@
       // Ignore the echo of our own save, and don't clobber unsaved typing.
       if (job && (dirty || incoming.rev === lastRev)) {
         renderPickers();
-        if (!dirty) { renderLabour(); updateNumbers(); }
+        if (!dirty) { renderMaterials(); renderLabour(); updateNumbers(); }
         return;
       }
       job = normaliseJob(Q.clone(incoming));
