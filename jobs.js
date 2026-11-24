@@ -56,7 +56,9 @@
         '<td><strong>' + Q.esc(j.name || "(untitled)") + '</strong>' + (j.address ? '<br><span class="muted">' + Q.esc(j.address) + '</span>' : "") + '</td>' +
         '<td>' + Q.esc(j.customer) + '</td>' +
         '<td>' + Q.esc(Q.fmtDate(j.date)) + '</td>' +
-        '<td><span class="status-pill status-' + Q.esc((j.status || "").replace(/\s+/g, "-")) + '">' + Q.esc(j.status) + '</span></td>' +
+        '<td><select class="status-select status-' + Q.esc((j.status || "").replace(/\s+/g, "-")) + '" data-status-id="' + Q.esc(j.id) + '" aria-label="Status">' +
+          Q.STATUSES.map(function (s) { return '<option' + (s === j.status ? " selected" : "") + '>' + Q.esc(s) + '</option>'; }).join("") +
+        '</select></td>' +
         '<td class="num">' + Q.money(c.total) + '</td>' +
         '<td class="num">' + Q.money(c.cost) + '</td>' +
         '<td class="num ' + (c.profit >= 0 ? "pos" : "neg") + '">' + Q.money(c.profit) + ' <span class="muted">(' + c.profitPct.toFixed(0) + '%)</span></td>' +
@@ -70,7 +72,20 @@
       Q.esc(value) + '</div><div class="tile-sub">' + Q.esc(sub) + '</div></div>';
   }
 
+  // Change a job's status straight from the list.
+  body.addEventListener("change", function (e) {
+    var id = e.target.getAttribute("data-status-id");
+    if (!id || !state.jobs[id]) return;
+    var job = Q.clone(state.jobs[id]);
+    job.status = e.target.value;
+    job.updatedAt = Date.now();
+    job.rev = Q.uid();
+    e.target.className = "status-select status-" + job.status.replace(/\s+/g, "-");
+    QuoteStore.saveJob(job);
+  });
+
   body.addEventListener("click", function (e) {
+    if (e.target.closest(".status-select")) return;   // don't open the job
     var tr = e.target.closest("tr[data-id]");
     if (tr) window.location.href = "job.html?id=" + encodeURIComponent(tr.getAttribute("data-id"));
   });

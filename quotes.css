@@ -364,3 +364,24 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
 .include-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .include-toggle input { width: 18px; height: 18px; accent-color: var(--brand-tan-dark); }
 .small-note { font-size: 0.78rem; margin-left: 6px; }
+
+/* Status dropdown on the Jobs list, coloured like the status pills */
+.status-select {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-color: #f1efe9;
+  color: var(--muted);
+  cursor: pointer;
+}
+.status-select:hover, .status-select:focus { border-color: var(--border); outline: none; }
+.status-select.status-Quoted { background-color: #fdf3e4; color: var(--brand-tan-dark); }
+.status-select.status-Accepted { background-color: #e8f0fb; color: #1d4ed8; }
+.status-select.status-In-Progress { background-color: #efe9fb; color: #6d28d9; }
+.status-select.status-Completed { background-color: #eaf7ee; color: var(--success); }
+.status-select.status-Lost { background-color: var(--danger-bg); color: var(--danger); }
+.status-select option { background: #fff; color: var(--text); font-weight: 400; }
+.q-table .status-select { width: auto; border-radius: 999px; padding: 4px 8px; border-color: transparent; }
