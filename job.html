@@ -6,7 +6,7 @@
 <title>Job – Job Quotes</title>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=6">
+<link rel="stylesheet" href="quotes.css?v=8">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
           <h2 class="card-title">Materials &amp; hardware</h2>
           <span class="section-total">Total <strong id="matTotal">$0.00</strong></span>
         </div>
-        <p class="hint">Enter quantities from your Mozaik report. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. For something not on the list, use <strong>+ Extra item</strong>, enter its cost and markup, and optionally <strong>Save to list</strong>.</p>
+        <p class="hint">Enter quantities from your Mozaik report. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. Tap <strong>+ Add line</strong> and pick the item from the <strong>Item</strong> dropdown. For something not on the list, choose <strong>New item</strong>, enter its cost and markup, and tap <strong>Save to list</strong> to keep it.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -87,9 +87,7 @@
           </table>
         </div>
         <div class="add-row">
-          <select id="matPicker" class="q-input"></select>
-          <button type="button" class="small-btn" id="matAddBtn">+ Add item</button>
-          <button type="button" class="small-btn" id="matCustomBtn">+ Extra item</button>
+          <button type="button" class="small-btn" id="matLineBtn">+ Add line</button>
           <button type="button" class="small-btn" id="matAllBtn" title="Adds every Price List item not already on this job, with qty 0 – like Mozaik's template">+ Whole price list</button>
           <button type="button" class="small-btn danger" id="matClearZeroBtn">Remove zero-qty lines</button>
         </div>
@@ -193,6 +191,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=6"></script>
-<script src="job.js?v=7"></script>
+<script src="job.js?v=8"></script>
 </body>
 </html>

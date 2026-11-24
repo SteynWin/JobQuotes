@@ -34,7 +34,7 @@
 
     // Build sections: material categories, then Labour, then Additional items.
     var cats = state.catalog.categories;
-    var mats = (job.materials || []).filter(function (l) { return Q.num(l.qty) !== 0; });
+    var mats = (job.materials || []).filter(function (l) { return Q.num(l.qty) !== 0 && !l.pending; });
     mats.sort(function (a, b) {
       var ia = cats.indexOf(a.category), ib = cats.indexOf(b.category);
       return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);

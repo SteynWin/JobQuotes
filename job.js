@@ -95,6 +95,28 @@
     return JSON.stringify(job.materials) !== before;
   }
 
+  // <option>s for a row's Item dropdown: every Price List item grouped by
+  // category, plus "New item" for something that isn't on the list.
+  var NEW_ITEM = "__new";
+  function itemOptions(selectedId, isNew) {
+    var cat = state.catalog, groups = {};
+    cat.items.forEach(function (it) { (groups[it.category] = groups[it.category] || []).push(it); });
+    var order = cat.categories.slice();
+    Object.keys(groups).forEach(function (g) { if (order.indexOf(g) === -1) order.push(g); });
+    return '<option value=""' + (!selectedId && !isNew ? " selected" : "") + ' disabled>Choose an item…</option>' +
+      order.filter(function (g) { return groups[g]; }).map(function (g) {
+        return '<optgroup label="' + Q.esc(g) + '">' + groups[g].map(function (it) {
+          return '<option value="' + Q.esc(it.id) + '"' + (it.id === selectedId ? " selected" : "") + '>' +
+            Q.esc(it.name) + ' – ' + Q.money(it.price) + '/' + Q.esc(it.unit) + '</option>';
+        }).join("") + '</optgroup>';
+      }).join("") +
+      '<option value="' + NEW_ITEM + '"' + (isNew ? " selected" : "") + '>➕ New item (not in Price List)…</option>';
+  }
+  function itemSelect(l, isNew) {
+    return '<select class="item-select" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="pick">' +
+      itemOptions(l.itemId, isNew) + '</select>';
+  }
+
   function categoryOptions(selected) {
     var cats = state.catalog.categories.slice();
     if (selected && cats.indexOf(selected) === -1) cats.push(selected);
@@ -109,19 +131,29 @@
       tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No materials yet. Pick a Price List item below, or add the whole price list and type in quantities.</td></tr>';
       return;
     }
-    lines.sort(function (a, b) { return catIndex(a.category) - catIndex(b.category); });
+    // Lines still waiting for an item to be chosen go last.
+    var groupOf = function (l) { return l.pending ? "\u0000new" : l.category; };
+    lines.sort(function (a, b) {
+      return (a.pending ? 1 : 0) - (b.pending ? 1 : 0) || catIndex(a.category) - catIndex(b.category);
+    });
     var html = "", lastCat = null;
     lines.forEach(function (l) {
-      if (l.category !== lastCat) {
-        lastCat = l.category;
-        html += '<tr class="cat-row"><td colspan="7">' + Q.esc(l.category || "Other") + '</td>' +
+      if (groupOf(l) !== lastCat) {
+        lastCat = groupOf(l);
+        html += '<tr class="cat-row"><td colspan="7">' + Q.esc(l.pending ? "New lines – choose an item" : (l.category || "Other")) + '</td>' +
           '<td class="num" data-cattotal="' + Q.esc(l.category) + '"></td><td></td></tr>';
       }
       var linked = !!catalogItem(l);
       var del = '<button type="button" class="icon-btn" data-del="materials" data-id="' + Q.esc(l.id) + '" title="Remove">&times;</button>';
-      if (linked) {
+      if (l.pending) {
+        html += '<tr data-row="' + Q.esc(l.id) + '" class="pending-row">' +
+          '<td colspan="2">' + itemSelect(l, false) + '</td>' +
+          '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
+          '<td colspan="5" class="muted">Pick an item from the Price List, or choose “New item”.</td>' +
+          '<td class="col-del">' + del + '</td></tr>';
+      } else if (linked) {
         html += '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
-          '<td><strong>' + Q.esc(l.name) + '</strong></td>' +
+          '<td>' + itemSelect(l, false) + '</td>' +
           '<td class="muted">' + Q.esc(l.description) + '</td>' +
           '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
           '<td class="col-unit">' + Q.esc(l.unit) + '</td>' +
@@ -132,9 +164,9 @@
           '</tr>';
       } else {
         html += '<tr data-row="' + Q.esc(l.id) + '" class="extra-row' + (Q.num(l.qty) ? "" : " zero") + '">' +
-          '<td>' + textInput("materials", l, "name", "Item name") +
+          '<td>' + itemSelect(l, true) + textInput("materials", l, "name", "New item name") + '</td>' +
+          '<td>' + textInput("materials", l, "description", "Description (optional)") +
             '<select class="cat-select" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="category" title="Category">' + categoryOptions(l.category) + '</select></td>' +
-          '<td>' + textInput("materials", l, "description", "optional") + '</td>' +
           '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
           '<td class="col-unit">' + textInput("materials", l, "unit") + '</td>' +
           '<td class="num col-money">' + moneyInput("materials", l, "cost") + '</td>' +
@@ -265,11 +297,6 @@
     cat.items.forEach(function (it) { (groups[it.category] = groups[it.category] || []).push(it); });
     var order = cat.categories.slice();
     Object.keys(groups).forEach(function (g) { if (order.indexOf(g) === -1) order.push(g); });
-    $("matPicker").innerHTML = '<option value="">Choose a price list item…</option>' + order.filter(function (g) { return groups[g]; }).map(function (g) {
-      return '<optgroup label="' + Q.esc(g) + '">' + groups[g].map(function (it) {
-        return '<option value="' + Q.esc(it.id) + '">' + Q.esc(it.name) + ' – ' + Q.money(it.price) + '/' + Q.esc(it.unit) + '</option>';
-      }).join("") + '</optgroup>';
-    }).join("");
     var others = cat.labourRates.filter(function (r) { return !Q.fixedLabourKey(r); });
     $("labPicker").innerHTML = others.length ? others.map(function (r) {
       return '<option value="' + Q.esc(r.id) + '">' + Q.esc(r.name) + ' – ' + Q.money(r.rate) + '/' + Q.esc(r.unit || "Hrs") + '</option>';
@@ -380,6 +407,7 @@
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
     if (list === "materials" && f === "cost") line.price = line.cost;
     if (list === "materials" && f === "category") { rerender("materials"); changed(); return; }
+    if (list === "materials" && f === "pick") { pickItem(line, el.value); return; }
     if ((list === "materials" || list === "labour") && f === "qty") {
       var tr = el.closest("tr");
       if (tr) tr.classList.toggle("zero", !Q.num(line.qty));
@@ -422,25 +450,36 @@
     if (el) { el.focus(); if (el.select) el.select(); }
   }
 
-  $("matAddBtn").addEventListener("click", function () {
-    var id = $("matPicker").value;
-    var it = state.catalog.items.find(function (x) { return x.id === id; });
-    if (!it) { $("matPicker").focus(); return; }
-    var existing = job.materials.find(function (l) { return l.itemId === it.id; });
-    if (existing) { focusRow(existing.id, "qty"); return; }
-    var line = fromItem(it);
+  $("matLineBtn").addEventListener("click", function () {
+    var line = { id: Q.uid(), itemId: null, pending: true, category: "", name: "", description: "", unit: "#",
+      qty: 1, cost: 0, price: 0, markup: 0 };
     job.materials.push(line);
+    rerender("materials"); changed();
+    var sel = document.querySelector('[data-id="' + cssEsc(line.id) + '"][data-f="pick"]');
+    if (sel) { sel.focus(); if (sel.showPicker) { try { sel.showPicker(); } catch (e) { /* not allowed */ } } }
+  });
+
+  function pickItem(line, value) {
+    delete line.pick;
+    line.pending = false;
+    if (value === NEW_ITEM) {
+      line.itemId = null; line.name = ""; line.description = ""; line.unit = "#";
+      line.cost = 0; line.price = 0; line.markup = 0;
+      if (!line.category || state.catalog.categories.indexOf(line.category) === -1) {
+        line.category = state.catalog.categories.indexOf("Other") !== -1 ? "Other" : (state.catalog.categories[0] || "Other");
+      }
+      rerender("materials"); changed();
+      focusRow(line.id, "name");
+      return;
+    }
+    var it = state.catalog.items.find(function (x) { return x.id === value; });
+    if (!it) return;
+    line.itemId = it.id; line.markup = 0;
+    line.name = it.name; line.description = it.description || ""; line.unit = it.unit; line.category = it.category;
+    line.price = Q.num(it.price); line.cost = Q.num(it.cost);
     rerender("materials"); changed();
     focusRow(line.id, "qty");
-  });
-  $("matPicker").addEventListener("change", function () { $("matAddBtn").click(); });
-  $("matCustomBtn").addEventListener("click", function () {
-    var line = { id: Q.uid(), itemId: null, category: "Other", name: "", description: "", unit: "#", qty: 1, cost: 0, price: 0, markup: 0 };
-    if (state.catalog.categories.indexOf("Other") === -1 && state.catalog.categories.length) line.category = state.catalog.categories[0];
-    job.materials.push(line);
-    rerender("materials"); changed();
-    focusRow(line.id, "name");
-  });
+  }
 
   function saveToPriceList(lineId) {
     var l = job.materials.find(function (x) { return x.id === lineId; });
