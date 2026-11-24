@@ -29,6 +29,48 @@
     return ((p / c - 1) * 100).toFixed(0) + "%";
   }
 
+  // Items are read-only until you tap Edit on a row. Edits go into a draft
+  // and are only applied when you tap Save (Cancel throws them away), so a
+  // stray tap can't change a price. "+" on a category opens a new draft row.
+  var drafts = {};   // id -> { item: {...}, isNew: bool }
+
+  function markupOf(cost, price) {
+    cost = Q.num(cost); price = Q.num(price);
+    return cost ? Q.round2((price / cost - 1) * 100) : "";
+  }
+
+  function viewRow(it, cat) {
+    return '<tr data-item="' + Q.esc(it.id) + '" data-search="' + Q.esc((it.name + " " + (it.description || "") + " " + cat).toLowerCase()) + '">' +
+      '<td><strong>' + Q.esc(it.name || "(no name)") + '</strong></td>' +
+      '<td class="muted">' + Q.esc(it.description) + '</td>' +
+      '<td class="col-unit">' + Q.esc(it.unit) + '</td>' +
+      '<td class="num col-money">' + Q.money(it.cost) + '</td>' +
+      '<td class="num col-money"><strong>' + Q.money(it.price) + '</strong></td>' +
+      '<td class="num col-pct muted">' + markupText(it) + '</td>' +
+      '<td class="col-actions"><button type="button" class="small-btn" data-edit="' + Q.esc(it.id) + '">Edit</button></td>' +
+      '</tr>';
+  }
+  function editRow(d, cat) {
+    var it = d.item;
+    var catOpts = orderedCats().map(function (c) {
+      return '<option' + (c === it.category ? " selected" : "") + '>' + Q.esc(c) + '</option>';
+    }).join("");
+    return '<tr class="editing-row" data-item="' + Q.esc(it.id) + '" data-search="' + Q.esc((it.name + " " + cat).toLowerCase()) + '">' +
+      '<td>' + inp(it, "name", "text", "Item name") +
+        '<select class="cat-select" data-id="' + Q.esc(it.id) + '" data-f="category" title="Category">' + catOpts + '</select></td>' +
+      '<td>' + inp(it, "description", "text", "Description (optional)") + '</td>' +
+      '<td class="col-unit">' + inp(it, "unit", "text") + '</td>' +
+      '<td class="num col-money">' + inp(it, "cost", "number") + '</td>' +
+      '<td class="num col-money">' + inp(it, "price", "number") + '</td>' +
+      '<td class="num col-pct"><input type="number" step="0.1" inputmode="decimal" data-id="' + Q.esc(it.id) +
+        '" data-f="markup" value="' + Q.esc(markupOf(it.cost, it.price)) + '" title="Markup % – sets the price from the cost"></td>' +
+      '<td class="col-actions">' +
+        '<button type="button" class="small-btn save-btn" data-save="' + Q.esc(it.id) + '">Save</button>' +
+        '<button type="button" class="small-btn" data-cancel="' + Q.esc(it.id) + '">Cancel</button>' +
+        (d.isNew ? "" : '<button type="button" class="icon-btn" data-delitem="' + Q.esc(it.id) + '" title="Delete item">&times;</button>') +
+      '</td></tr>';
+  }
+
   function renderItems() {
     var cats = orderedCats();
     var html = "";
@@ -36,25 +78,47 @@
       var items = catalog.items.filter(function (it) { return it.category === cat; });
       html += '<tr class="cat-row" data-cat="' + Q.esc(cat) + '"><td colspan="6">' + Q.esc(cat) +
         ' <span class="muted" style="font-weight:400;text-transform:none">(' + items.length + ')</span></td>' +
-        '<td class="col-del"><button type="button" class="small-btn" data-additem="' + Q.esc(cat) + '" title="Add an item to ' + Q.esc(cat) + '">+</button></td></tr>';
+        '<td class="col-actions"><button type="button" class="small-btn" data-additem="' + Q.esc(cat) + '" title="Add an item to ' + Q.esc(cat) + '">+ Add</button></td></tr>';
       items.forEach(function (it) {
-        html += '<tr data-item="' + Q.esc(it.id) + '" data-search="' + Q.esc((it.name + " " + it.description + " " + cat).toLowerCase()) + '">' +
-          '<td>' + inp(it, "name", "text") + '</td>' +
-          '<td>' + inp(it, "description", "text") + '</td>' +
-          '<td class="col-unit">' + inp(it, "unit", "text") + '</td>' +
-          '<td class="num col-money">' + inp(it, "cost", "number") + '</td>' +
-          '<td class="num col-money">' + inp(it, "price", "number") + '</td>' +
-          '<td class="num col-pct muted" data-markup="' + Q.esc(it.id) + '">' + markupText(it) + '</td>' +
-          '<td class="col-del"><button type="button" class="icon-btn" data-delitem="' + Q.esc(it.id) + '" title="Delete">&times;</button></td>' +
-          '</tr>';
+        html += drafts[it.id] ? editRow(drafts[it.id], cat) : viewRow(it, cat);
+      });
+      Object.keys(drafts).forEach(function (id) {
+        var d = drafts[id];
+        if (d.isNew && d.item.category === cat) html += editRow(d, cat);
       });
     });
     body.innerHTML = html || '<tr><td colspan="7" class="empty-note">No categories. Add one below.</td></tr>';
     applySearch();
   }
-  function inp(it, f, type) {
+  function inp(it, f, type, ph) {
     return '<input type="' + type + '"' + (type === "number" ? ' step="0.01" inputmode="decimal"' : "") +
-      ' data-id="' + Q.esc(it.id) + '" data-f="' + f + '" value="' + Q.esc(it[f]) + '">';
+      ' data-id="' + Q.esc(it.id) + '" data-f="' + f + '" value="' + Q.esc(it[f]) + '"' +
+      (ph ? ' placeholder="' + Q.esc(ph) + '"' : "") + '>';
+  }
+  function focusField(id, f) {
+    var el = body.querySelector('[data-id="' + cssEsc(id) + '"][data-f="' + f + '"]');
+    if (el) { el.focus(); if (el.select) el.select(); }
+  }
+
+  function saveDraft(id) {
+    var d = drafts[id];
+    if (!d) return;
+    var it = d.item;
+    it.name = String(it.name || "").trim();
+    if (!it.name) { say("Give the item a name before saving."); focusField(id, "name"); return; }
+    it.cost = Q.num(it.cost); it.price = Q.num(it.price);
+    var idx = catalog.items.findIndex(function (x) { return x.id === id; });
+    if (idx === -1) {
+      var lastIdx = -1;
+      catalog.items.forEach(function (x, i) { if (x.category === it.category) lastIdx = i; });
+      catalog.items.splice(lastIdx + 1, 0, it);
+    } else {
+      catalog.items[idx] = it;
+    }
+    if (catalog.categories.indexOf(it.category) === -1) catalog.categories.push(it.category);
+    delete drafts[id];
+    say('"' + it.name + '" saved.', true);
+    renderAll(); changed();
   }
 
   function applySearch() {
@@ -94,39 +158,57 @@
 
   function renderAll() { renderItems(); renderCats(); }
 
-  // Item edits
-  body.addEventListener("input", function (e) {
+  // Edits while a row is open (drafts only, nothing saved yet)
+  function onDraftInput(e) {
     var el = e.target, id = el.getAttribute("data-id");
-    if (!id) return;
-    var it = catalog.items.find(function (x) { return x.id === id; });
-    if (!it) return;
-    var f = el.getAttribute("data-f");
-    it[f] = (f === "cost" || f === "price") ? Q.num(el.value) : el.value;
-    var m = body.querySelector('[data-markup="' + cssEsc(id) + '"]');
-    if (m) m.textContent = markupText(it);
-    changed();
+    if (!id || !drafts[id]) return;
+    var it = drafts[id].item, f = el.getAttribute("data-f");
+    var row = el.closest("tr");
+    var setVal = function (field, v) { var x = row.querySelector('[data-f="' + field + '"]'); if (x && x !== el) x.value = v; };
+    if (f === "markup") {
+      it.price = Q.round2(Q.num(it.cost) * (1 + Q.num(el.value) / 100));
+      setVal("price", it.price);
+    } else if (f === "cost" || f === "price") {
+      it[f] = el.value === "" ? "" : Q.num(el.value);
+      setVal("markup", markupOf(it.cost, it.price));
+    } else {
+      it[f] = el.value;
+    }
+  }
+  body.addEventListener("input", onDraftInput);
+  body.addEventListener("change", function (e) { if (e.target.tagName === "SELECT") onDraftInput(e); });
+  body.addEventListener("keydown", function (e) {
+    var id = e.target.getAttribute && e.target.getAttribute("data-id");
+    if (!id || !drafts[id]) return;
+    if (e.key === "Enter") { e.preventDefault(); saveDraft(id); }
+    if (e.key === "Escape") { delete drafts[id]; renderItems(); }
   });
+
   body.addEventListener("click", function (e) {
-    var add = e.target.closest("[data-additem]");
-    if (add) {
-      var cat = add.getAttribute("data-additem");
-      var it = { id: Q.uid(), category: cat, name: "", description: "", unit: "#", cost: 0, price: 0 };
-      // insert after the last item in this category
-      var lastIdx = -1;
-      catalog.items.forEach(function (x, i) { if (x.category === cat) lastIdx = i; });
-      catalog.items.splice(lastIdx + 1, 0, it);
-      $("priceSearch").value = "";
-      renderAll(); changed();
-      var el = body.querySelector('[data-id="' + cssEsc(it.id) + '"][data-f="name"]');
-      if (el) el.focus();
+    var b;
+    if ((b = e.target.closest("[data-edit]"))) {
+      var id = b.getAttribute("data-edit");
+      var it = catalog.items.find(function (x) { return x.id === id; });
+      if (it) { drafts[id] = { item: Q.clone(it), isNew: false }; renderItems(); focusField(id, "price"); }
       return;
     }
-    var del = e.target.closest("[data-delitem]");
-    if (del) {
-      var id = del.getAttribute("data-delitem");
-      var item = catalog.items.find(function (x) { return x.id === id; });
-      if (item && item.name && !confirm('Delete "' + item.name + '" from the price list? Jobs that already use it keep their copy.')) return;
-      catalog.items = catalog.items.filter(function (x) { return x.id !== id; });
+    if ((b = e.target.closest("[data-save]"))) { saveDraft(b.getAttribute("data-save")); return; }
+    if ((b = e.target.closest("[data-cancel]"))) { delete drafts[b.getAttribute("data-cancel")]; say(""); renderItems(); return; }
+    if ((b = e.target.closest("[data-additem]"))) {
+      var cat = b.getAttribute("data-additem");
+      var nu = { id: Q.uid(), category: cat, name: "", description: "", unit: "#", cost: 0, price: 0 };
+      drafts[nu.id] = { item: nu, isNew: true };
+      $("priceSearch").value = "";
+      renderItems();
+      focusField(nu.id, "name");
+      return;
+    }
+    if ((b = e.target.closest("[data-delitem]"))) {
+      var did = b.getAttribute("data-delitem");
+      var item = catalog.items.find(function (x) { return x.id === did; });
+      if (item && !confirm('Delete "' + (item.name || "this item") + '" from the Price List? Jobs that already use it keep it at its current price as an extra item.')) return;
+      catalog.items = catalog.items.filter(function (x) { return x.id !== did; });
+      delete drafts[did];
       renderAll(); changed();
     }
   });

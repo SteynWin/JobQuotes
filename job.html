@@ -6,7 +6,7 @@
 <title>Job – Job Quotes</title>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=10">
+<link rel="stylesheet" href="quotes.css?v=12">
 </head>
 <body>
 
@@ -67,7 +67,7 @@
           <h2 class="card-title">Materials &amp; hardware</h2>
           <span class="section-total">Total <strong id="matTotal">$0.00</strong></span>
         </div>
-        <p class="hint">Enter quantities from your Mozaik report. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. Tap <strong>+ Add line</strong> and pick the item from the <strong>Item</strong> dropdown. For something not on the list, choose <strong>New item</strong>, enter its cost and markup, and tap <strong>Save to list</strong> to keep it.</p>
+        <p class="hint">Enter quantities from your Mozaik report. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. Tap <strong>+ Add line</strong> and pick the item from the <strong>Item</strong> dropdown. For something not on the list, choose <strong>New item</strong>, type its name, cost and markup, and tap <strong>Save to list</strong> to keep it.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -76,8 +76,6 @@
                 <th>Description</th>
                 <th class="num col-qty">Qty</th>
                 <th class="col-unit">Unit</th>
-                <th class="num col-money">Cost</th>
-                <th class="num col-pct">Markup %</th>
                 <th class="num col-money">Price</th>
                 <th class="num col-total">Total</th>
                 <th class="col-del"></th>
@@ -191,6 +189,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=6"></script>
-<script src="job.js?v=9"></script>
+<script src="job.js?v=10"></script>
 </body>
 </html>

@@ -349,3 +349,15 @@ body.exporting-pdf .quote-paper { border: none; padding: 0 4px; max-width: none;
 .q-table tr.extra-row .item-select { margin-bottom: 4px; font-weight: 500; color: var(--brand-tan-dark); }
 .q-table tr.pending-row td { background: #fdf8ef; }
 .q-table input[data-f="note"] { min-width: 210px; }
+
+/* Price List: read-only rows with an Edit button; editing row highlighted */
+.q-table .col-actions { width: 1%; white-space: nowrap; text-align: right; }
+.q-table .col-actions .small-btn { padding: 5px 10px; font-size: 0.8rem; margin-left: 4px; }
+.q-table tr.editing-row td { background: #fefbf5; }
+.q-table .save-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+.q-table .save-btn:hover { background: var(--accent-dark); }
+
+/* New item: cost + markup sit under the name instead of in their own columns */
+.new-item-pricing { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.new-item-pricing label { display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.new-item-pricing input[type="number"] { width: 80px; min-width: 70px; padding: 5px 6px; }

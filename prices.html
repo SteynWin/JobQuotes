@@ -6,7 +6,7 @@
 <title>Price List – Job Quotes</title>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=10">
+<link rel="stylesheet" href="quotes.css?v=12">
 </head>
 <body>
 
@@ -47,7 +47,7 @@
       <button type="button" class="small-btn" id="csvImportBtn">Import CSV</button>
       <input type="file" id="csvFile" accept=".csv,text/csv" class="hidden">
     </div>
-    <p class="hint"><strong>Cost</strong> is what you pay the supplier. <strong>Price</strong> is the unit price that goes on the quote. Changes here apply to items you add to jobs from now on. To update jobs you've already priced, use <em>Refresh prices</em> on that job. CSV columns: Category, Item, Description, Unit, Cost, Price.</p>
+    <p class="hint"><strong>Cost</strong> is what you pay the supplier. <strong>Price</strong> is the unit price that goes on the quote. Tap <strong>Edit</strong> on an item to change it (you can set the price directly or with a markup %), then <strong>Save</strong>. Price changes flow into every Draft or Quoted job automatically. Accepted jobs keep the prices they were agreed at. CSV columns: Category, Item, Description, Unit, Cost, Price.</p>
     <div id="priceMsg" class="form-errors" role="status"></div>
     <div class="table-scroll">
       <table class="q-table">
@@ -58,8 +58,8 @@
             <th class="col-unit">Unit</th>
             <th class="num col-money">Cost</th>
             <th class="num col-money">Price</th>
-            <th class="num col-pct">Markup</th>
-            <th class="col-del"></th>
+            <th class="num col-pct">Markup %</th>
+            <th class="col-actions"></th>
           </tr>
         </thead>
         <tbody id="priceBody"></tbody>
@@ -86,6 +86,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=6"></script>
-<script src="prices.js?v=1"></script>
+<script src="prices.js?v=2"></script>
 </body>
 </html>

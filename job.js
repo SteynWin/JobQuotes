@@ -131,7 +131,7 @@
     var tbody = $("matBody");
     var lines = job.materials.slice();
     if (!lines.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-note">No materials yet. Pick a Price List item below, or add the whole price list and type in quantities.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-note">No materials yet. Pick a Price List item below, or add the whole price list and type in quantities.</td></tr>';
       return;
     }
     // Lines still waiting for an item to be chosen go last.
@@ -143,7 +143,7 @@
     lines.forEach(function (l) {
       if (groupOf(l) !== lastCat) {
         lastCat = groupOf(l);
-        html += '<tr class="cat-row"><td colspan="7">' + Q.esc(l.pending ? "New lines – choose an item" : (l.category || "Other")) + '</td>' +
+        html += '<tr class="cat-row"><td colspan="5">' + Q.esc(l.pending ? "New lines – choose an item" : (l.category || "Other")) + '</td>' +
           '<td class="num" data-cattotal="' + Q.esc(l.category) + '"></td><td></td></tr>';
       }
       var linked = !!catalogItem(l);
@@ -152,7 +152,7 @@
         html += '<tr data-row="' + Q.esc(l.id) + '" class="pending-row">' +
           '<td colspan="2">' + itemSelect(l, false) + '</td>' +
           '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
-          '<td colspan="5" class="muted">Pick an item from the Price List, or choose “New item”.</td>' +
+          '<td colspan="3" class="muted">Pick an item from the Price List, or choose “New item”.</td>' +
           '<td class="col-del">' + del + '</td></tr>';
       } else if (linked) {
         html += '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
@@ -160,20 +160,21 @@
           '<td>' + textInput("materials", l, "note", l.description || "Extra info (optional)") + '</td>' +
           '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
           '<td class="col-unit">' + Q.esc(l.unit) + '</td>' +
-          '<td class="col-money"></td><td class="col-pct"></td>' +
           '<td class="num col-money">' + Q.money(l.price) + '</td>' +
           '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
           '<td class="col-del">' + del + '</td>' +
           '</tr>';
       } else {
         html += '<tr data-row="' + Q.esc(l.id) + '" class="extra-row' + (Q.num(l.qty) ? "" : " zero") + '">' +
-          '<td>' + itemSelect(l, true) + textInput("materials", l, "name", "New item name") + '</td>' +
+          '<td>' + itemSelect(l, true) + textInput("materials", l, "name", "New item name") +
+            '<div class="new-item-pricing">' +
+              '<label>Cost ' + moneyInput("materials", l, "cost") + '</label>' +
+              '<label>+ Markup ' + moneyInput("materials", l, "markup") + ' %</label>' +
+            '</div></td>' +
           '<td>' + textInput("materials", l, "description", "Description (optional)") +
             '<select class="cat-select" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="category" title="Category">' + categoryOptions(l.category) + '</select></td>' +
           '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
           '<td class="col-unit">' + textInput("materials", l, "unit") + '</td>' +
-          '<td class="num col-money">' + moneyInput("materials", l, "cost") + '</td>' +
-          '<td class="num col-pct">' + moneyInput("materials", l, "markup") + '</td>' +
           '<td class="num col-money" data-unitprice="' + Q.esc(l.id) + '"></td>' +
           '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
           '<td class="col-del"><button type="button" class="small-btn save-item-btn" data-saveitem="' + Q.esc(l.id) + '" title="Save this item to the Price List">Save to list</button>' + del + '</td>' +
