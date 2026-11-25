@@ -499,6 +499,17 @@
     return rows.filter(function (r) { return r.some(function (v) { return v.trim() !== ""; }); });
   }
 
+  // Browsers change a focused number box when you roll the mouse wheel over
+  // it, which silently alters quantities and prices. Stop that everywhere:
+  // the wheel scrolls the page instead and values only change by typing.
+  document.addEventListener("wheel", function (e) {
+    var el = e.target;
+    if (el && el.tagName === "INPUT" && el.type === "number" && el === document.activeElement) {
+      e.preventDefault();
+      window.scrollBy(0, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY);
+    }
+  }, { passive: false });
+
   window.Q = {
     uid: uid, num: num, round2: round2, money: money, esc: esc,
     todayISO: todayISO, fmtDate: fmtDate, addDaysISO: addDaysISO, param: param,
