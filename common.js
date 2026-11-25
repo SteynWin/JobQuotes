@@ -363,7 +363,7 @@
     var actual = 0, variations = 0;
     (job.expenses || []).forEach(function (e) { actual += num(e.amount); variations += num(e.charge); });
     // Overheads & margin % applies to materials, labour, installation,
-    // design and the variations charged to the client - but NOT to Extras
+    // design and the variations charged to the client - but NOT to Buy outs
     // (their charge already includes their own markup).
     var marginBase = materials + labour + installation + design + variations;
     var margin = marginBase * num(job.marginPct) / 100;

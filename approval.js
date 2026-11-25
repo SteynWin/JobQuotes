@@ -63,7 +63,7 @@
 
     var fc = job.fixedCharges || {};
     if (fc.design && fc.design.included) sec("Design", [lineRow("Design", "", 1, "", fc.design.cost, fc.design.amount)]);
-    sec("Extras", (job.addOns || []).filter(function (a) { return a.included !== false; }).map(function (a) {
+    sec("Buy outs", (job.addOns || []).filter(function (a) { return a.included !== false; }).map(function (a) {
       return lineRow(a.name || "Extra", "", 1, "", a.cost, a.amount);
     }));
     return sections;
@@ -121,7 +121,7 @@
         '</td><td class="num ' + cls(varCharge - varCost) + '">' + Q.money(varCharge - varCost) + '</td><td class="num">' + pct(varCharge - varCost, varCharge) + '</td></tr>';
     }
     html += '<tr><td>Overheads &amp; margin (' + Q.num(job.marginPct) + '% of ' + Q.money(c.marginBase) +
-      ' – everything except Extras)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
+      ' – everything except Buy outs)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
       '</td><td class="num pos">' + Q.money(c.margin) + '</td><td></td></tr>';
     if (delivery) {
       html += '<tr><td>Delivery (after GST)</td><td class="num">' + Q.money(delivery.cost) + '</td><td class="num">' + Q.money(delivery.amount) +
@@ -139,7 +139,7 @@
       '<h2 class="appr-h">Quote totals (client)</h2><table class="qp-totals appr-totals">' +
         tr("Items", c.itemsTotal) +
         (c.variations ? tr("Variations", c.variations) : "") +
-        tr("Overheads & margin (" + Q.num(job.marginPct) + "%, excl. Extras)", c.margin) +
+        tr("Overheads & margin (" + Q.num(job.marginPct) + "%, excl. Buy outs)", c.margin) +
         tr("Subtotal", c.subtotal, "strong") +
         tr(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +
         (c.delivery ? tr("Delivery (after " + tax + ")", c.delivery) : "") +
@@ -187,7 +187,7 @@
         Q.money(delivery.amount) + '</td><td class="num">' + Q.money(dp) + '</td></tr>';
     }
     html += '</tbody></table>' +
-      '<p class="muted appr-note">Line sell prices are before the ' + Q.num(job.marginPct) + '% overheads &amp; margin, which is shown as its own line above. Extras carry no overheads.</p>';
+      '<p class="muted appr-note">Line sell prices are before the ' + Q.num(job.marginPct) + '% overheads &amp; margin, which is shown as its own line above. Buy outs carry no overheads.</p>';
 
     // ---- Approval
     var ap = job.approval || {};

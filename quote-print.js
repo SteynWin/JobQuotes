@@ -32,7 +32,7 @@
     // so the client sees final prices and no separate margin line.
     var k = fold.checked ? 1 + Q.num(job.marginPct) / 100 : 1;
 
-    // Build sections: material categories, then Labour, Installation, Design, Extras, Variations.
+    // Build sections: material categories, then Labour, Installation, Design, Buy outs, Variations.
     var cats = state.catalog.categories;
     var mats = (job.materials || []).filter(function (l) { return Q.num(l.qty) !== 0 && !l.pending; });
     mats.sort(function (a, b) {
@@ -61,8 +61,8 @@
     }
     var adds = (job.addOns || []).filter(function (a) { return Q.num(a.amount) !== 0 && a.included !== false; });
     if (adds.length) {
-      sections.push({ name: "Extras", rows: adds.map(function (a) {
-        return { name: a.name, desc: "", qty: 1, unit: "", unitPrice: Q.num(a.amount) };   // no overheads on extras
+      sections.push({ name: "Buy outs", rows: adds.map(function (a) {
+        return { name: a.name, desc: "", qty: 1, unit: "", unitPrice: Q.num(a.amount) };   // no overheads on buy outs
       }) });
     }
     // Variations carry the overheads & margin %, like the items.

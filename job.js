@@ -346,7 +346,7 @@
   function renderAddOns() {
     var tbody = $("addBody");
     if (!job.addOns.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No extras.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No buy outs.</td></tr>';
       return;
     }
     tbody.innerHTML = job.addOns.map(function (a) {
@@ -363,7 +363,7 @@
   function renderExpenses() {
     var tbody = $("expBody");
     if (!job.expenses.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-note">No extra costs or variations yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-note">No extra costs or variations yet.</td></tr>';
       return;
     }
     tbody.innerHTML = job.expenses.map(function (x) {
@@ -374,6 +374,7 @@
         '</select></td>' +
         '<td>' + textInput("expenses", x, "description", "e.g. Extra benchtop cut-out") + '</td>' +
         '<td class="num col-money">' + moneyInput("expenses", x, "amount") + '</td>' +
+        '<td class="num col-pct">' + moneyInput("expenses", x, "markupPct") + '</td>' +
         '<td class="num col-money">' + moneyInput("expenses", x, "charge") + '</td>' +
         '<td class="col-del"><button type="button" class="icon-btn" data-del="expenses" data-id="' + Q.esc(x.id) + '" title="Remove">&times;</button></td>' +
         '</tr>';
@@ -412,11 +413,11 @@
   function buildSummary() {
     var tax = state.catalog.settings.taxName || "Tax";
     $("summaryTable").innerHTML =
-      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Extras", "s_add") +
+      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Buy outs", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
       '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %' +
-        '<div class="muted small-note" style="margin:0">on everything except Extras</div></td><td id="s_margin"></td></tr>' +
+        '<div class="muted small-note" style="margin:0">on everything except Buy outs</div></td><td id="s_margin"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
       '<tr><td>Delivery <span class="muted">(after GST)</span></td><td id="s_deliv"></td></tr>' +
@@ -507,20 +508,21 @@
     }
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
     if (list === "materials" && f === "cost") line.price = line.cost;
-    // Extras: charge = cost + markup %. Changing cost or markup sets the
-    // charge; typing a charge works out the markup instead.
-    if (list === "addOns" && (f === "cost" || f === "markupPct" || f === "amount")) {
+    // Buy outs and variations: charge = cost + markup %. Changing the cost
+    // or markup sets the charge; typing a charge works out the markup.
+    var mk = list === "addOns" ? { cost: "cost", charge: "amount" } : list === "expenses" ? { cost: "amount", charge: "charge" } : null;
+    if (mk && (f === mk.cost || f === "markupPct" || f === mk.charge)) {
       var row = el.closest("tr");
       var setBox = function (field, v) {
         var box = row && row.querySelector('[data-f="' + field + '"]');
         if (box && box !== el) box.value = v;
       };
-      if (f === "amount") {
-        line.markupPct = Q.num(line.cost) && line.amount !== "" ? Q.round2((Q.num(line.amount) / Q.num(line.cost) - 1) * 100) : "";
+      if (f === mk.charge) {
+        line.markupPct = Q.num(line[mk.cost]) && line[mk.charge] !== "" ? Q.round2((Q.num(line[mk.charge]) / Q.num(line[mk.cost]) - 1) * 100) : "";
         setBox("markupPct", line.markupPct);
-      } else if (line.markupPct !== "" && line.markupPct != null && line.cost !== "") {
-        line.amount = Q.round2(Q.num(line.cost) * (1 + Q.num(line.markupPct) / 100));
-        setBox("amount", line.amount);
+      } else if (line.markupPct !== "" && line.markupPct != null && line[mk.cost] !== "") {
+        line[mk.charge] = Q.round2(Q.num(line[mk.cost]) * (1 + Q.num(line.markupPct) / 100));
+        setBox(mk.charge, line[mk.charge]);
       }
     }
     if (list === "materials" && f === "category") { rerender("materials"); changed(); return; }

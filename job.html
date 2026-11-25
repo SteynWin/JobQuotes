@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "21";
+    var APP_VERSION = "22";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -180,10 +180,10 @@
 
       <section class="card">
         <div class="toolbar">
-          <h2 class="card-title">Extras</h2>
+          <h2 class="card-title">Buy outs</h2>
           <span class="section-total">Total <strong id="addTotal">$0.00</strong></span>
         </div>
-        <p class="hint">Any other one-off charges for this job, such as a supplied appliance or a site fee. Type a description and your cost, then a markup % to work out the charge (or type the charge directly).</p>
+        <p class="hint">Items you buy in for this job, such as appliances, Hafele orders or other suppliers’ goods. Type a description and your cost, then a markup % to work out the charge (or type the charge directly).</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -199,7 +199,7 @@
           </table>
         </div>
         <div class="add-row">
-          <button type="button" class="small-btn" id="addAddBtn">+ Add extra</button>
+          <button type="button" class="small-btn" id="addAddBtn">+ Add buy out</button>
         </div>
       </section>
 
@@ -208,7 +208,7 @@
           <h2 class="card-title">Extra costs and variations</h2>
           <span class="section-total">Your cost <strong id="expTotal">$0.00</strong> · Charged to client <strong id="expCharge">$0.00</strong></span>
         </div>
-        <p class="hint">Log extra costs and variations as the job runs (supplier invoices, extra wages, changes on site). <strong>Your cost</strong> counts against your profit. Anything in <strong>Charge client</strong> is added to the quote under <strong>Variations</strong>; leave it at 0 if you're absorbing the cost.</p>
+        <p class="hint">Log extra costs and variations as the job runs (supplier invoices, extra wages, changes on site). <strong>Your cost</strong> counts against your profit. Anything in <strong>Charge client</strong> is added to the quote under <strong>Variations</strong>; enter a markup % to work it out from your cost, or leave it at 0 if you're absorbing the cost.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -217,6 +217,7 @@
                 <th style="width:150px">Type</th>
                 <th>Supplier / description</th>
                 <th class="num col-money">Your cost</th>
+                <th class="num col-pct">Markup %</th>
                 <th class="num col-money">Charge client</th>
                 <th class="col-del"></th>
               </tr>
@@ -251,7 +252,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=30"></script>
-<script src="job.js?v=30"></script>
+<script src="common.js?v=31"></script>
+<script src="job.js?v=31"></script>
 </body>
 </html>
