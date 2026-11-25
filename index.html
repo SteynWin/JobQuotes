@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "26";
+    var APP_VERSION = "27";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -84,7 +84,6 @@
             <th class="num">Quote total</th>
             <th class="num">Est. cost</th>
             <th class="num">Est. profit</th>
-            <th class="num">Extra costs</th>
           </tr>
         </thead>
         <tbody id="jobsBody"></tbody>
@@ -101,6 +100,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=35"></script>
-<script src="jobs.js?v=4"></script>
+<script src="jobs.js?v=5"></script>
 </body>
 </html>

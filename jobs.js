@@ -46,7 +46,7 @@
     });
 
     if (!shown.length) {
-      body.innerHTML = '<tr><td colspan="9" class="empty-note">' +
+      body.innerHTML = '<tr><td colspan="8" class="empty-note">' +
         (jobs.length ? "No jobs match." : "No jobs yet. Tap <strong>+ New Job</strong> to start a quote.") + '</td></tr>';
       return;
     }
@@ -63,7 +63,6 @@
         '<td class="num">' + Q.money(c.total) + '</td>' +
         '<td class="num">' + Q.money(c.cost) + '</td>' +
         '<td class="num ' + (c.profit >= 0 ? "pos" : "neg") + '">' + Q.money(c.profit) + ' <span class="muted">(' + c.profitPct.toFixed(0) + '%)</span></td>' +
-        '<td class="num">' + (c.actual ? Q.money(c.actual) : '<span class="muted">–</span>') + '</td>' +
         '</tr>';
     }).join("");
   }
