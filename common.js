@@ -358,13 +358,16 @@
     var design = on("design") ? num(fc.design.amount) : 0, designCost = on("design") ? num(fc.design.cost) : 0;
     var delivery = on("delivery") ? num(fc.delivery.amount) : 0, deliveryCost = on("delivery") ? num(fc.delivery.cost) : 0;
     var itemsTotal = materials + labour + installation + design + addOns;
-    var margin = itemsTotal * num(job.marginPct) / 100;
     // Variations: extra costs logged on the job. "amount" is what it costs
     // you; "charge" is what the client pays for it (0 = you absorb it).
-    // Charges are priced already, so they're added after the margin.
     var actual = 0, variations = 0;
     (job.expenses || []).forEach(function (e) { actual += num(e.amount); variations += num(e.charge); });
-    var subtotal = itemsTotal + margin + variations;
+    // Overheads & margin % applies to materials, labour, installation,
+    // design and the variations charged to the client - but NOT to Extras
+    // (their charge already includes their own markup).
+    var marginBase = materials + labour + installation + design + variations;
+    var margin = marginBase * num(job.marginPct) / 100;
+    var subtotal = itemsTotal + variations + margin;
     var tax = subtotal * num(job.taxPct) / 100;
     var total = subtotal + tax + delivery;   // delivery is after GST
     var deposit = total * num(job.depositPct) / 100;
@@ -376,7 +379,7 @@
       installation: round2(installation), installHours: round2(installHours),
       addOns: round2(addOns), addOnsCost: round2(addOnsCost),
       design: round2(design), delivery: round2(delivery),
-      itemsTotal: round2(itemsTotal), margin: round2(margin), variations: round2(variations), subtotal: round2(subtotal),
+      itemsTotal: round2(itemsTotal), margin: round2(margin), marginBase: round2(marginBase), variations: round2(variations), subtotal: round2(subtotal),
       tax: round2(tax), total: round2(total), deposit: round2(deposit),
       balance: round2(total - deposit),
       cost: round2(cost), profit: round2(revenue - cost),

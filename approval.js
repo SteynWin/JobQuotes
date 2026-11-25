@@ -115,13 +115,14 @@
         '</td><td class="num ' + cls(sec.total.profit) + '">' + Q.money(sec.total.profit) + '</td><td class="num">' + pct(sec.total.profit, sec.total.sell) + '</td></tr>';
     });
     html += '<tr class="appr-sum"><td>Items</td><td class="num">' + Q.money(tot.cost) + '</td><td class="num">' + Q.money(tot.sell) +
-      '</td><td class="num ' + cls(tot.profit) + '">' + Q.money(tot.profit) + '</td><td class="num">' + pct(tot.profit, tot.sell) + '</td></tr>' +
-      '<tr><td>Overheads &amp; margin (' + Q.num(job.marginPct) + '% of items)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
-      '</td><td class="num pos">' + Q.money(c.margin) + '</td><td></td></tr>';
+      '</td><td class="num ' + cls(tot.profit) + '">' + Q.money(tot.profit) + '</td><td class="num">' + pct(tot.profit, tot.sell) + '</td></tr>';
     if (varCharge || varCost) {
       html += '<tr><td>Variations</td><td class="num">' + Q.money(varCost) + '</td><td class="num">' + Q.money(varCharge) +
         '</td><td class="num ' + cls(varCharge - varCost) + '">' + Q.money(varCharge - varCost) + '</td><td class="num">' + pct(varCharge - varCost, varCharge) + '</td></tr>';
     }
+    html += '<tr><td>Overheads &amp; margin (' + Q.num(job.marginPct) + '% of ' + Q.money(c.marginBase) +
+      ' – everything except Extras)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
+      '</td><td class="num pos">' + Q.money(c.margin) + '</td><td></td></tr>';
     if (delivery) {
       html += '<tr><td>Delivery (after GST)</td><td class="num">' + Q.money(delivery.cost) + '</td><td class="num">' + Q.money(delivery.amount) +
         '</td><td class="num ' + cls(delivery.amount - delivery.cost) + '">' + Q.money(Q.num(delivery.amount) - Q.num(delivery.cost)) + '</td><td class="num">' +
@@ -137,8 +138,8 @@
     html += '<div class="appr-cols"><div>' +
       '<h2 class="appr-h">Quote totals (client)</h2><table class="qp-totals appr-totals">' +
         tr("Items", c.itemsTotal) +
-        tr("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) +
         (c.variations ? tr("Variations", c.variations) : "") +
+        tr("Overheads & margin (" + Q.num(job.marginPct) + "%, excl. Extras)", c.margin) +
         tr("Subtotal", c.subtotal, "strong") +
         tr(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +
         (c.delivery ? tr("Delivery (after " + tax + ")", c.delivery) : "") +
@@ -186,7 +187,7 @@
         Q.money(delivery.amount) + '</td><td class="num">' + Q.money(dp) + '</td></tr>';
     }
     html += '</tbody></table>' +
-      '<p class="muted appr-note">Line sell prices are before the ' + Q.num(job.marginPct) + '% overheads &amp; margin, which is shown as its own line above.</p>';
+      '<p class="muted appr-note">Line sell prices are before the ' + Q.num(job.marginPct) + '% overheads &amp; margin, which is shown as its own line above. Extras carry no overheads.</p>';
 
     // ---- Approval
     var ap = job.approval || {};

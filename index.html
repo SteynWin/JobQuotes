@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "20";
+    var APP_VERSION = "21";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -100,7 +100,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=9"></script>
+<script src="common.js?v=30"></script>
 <script src="jobs.js?v=4"></script>
 </body>
 </html>

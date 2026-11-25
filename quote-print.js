@@ -62,15 +62,15 @@
     var adds = (job.addOns || []).filter(function (a) { return Q.num(a.amount) !== 0 && a.included !== false; });
     if (adds.length) {
       sections.push({ name: "Extras", rows: adds.map(function (a) {
-        return { name: a.name, desc: "", qty: 1, unit: "", unitPrice: Q.num(a.amount) * k };
+        return { name: a.name, desc: "", qty: 1, unit: "", unitPrice: Q.num(a.amount) };   // no overheads on extras
       }) });
     }
-    // Variations are priced already, so the margin is never spread into them.
+    // Variations carry the overheads & margin %, like the items.
     var vars = (job.expenses || []).filter(function (x) { return Q.num(x.charge) !== 0; });
     if (vars.length) {
       sections.push({ name: "Variations", rows: vars.map(function (x) {
         return { name: x.description || x.type || "Variation", desc: x.date ? Q.fmtDate(x.date) : "", qty: 1, unit: "",
-          unitPrice: Q.num(x.charge) };
+          unitPrice: Q.num(x.charge) * k };
       }) });
     }
     sections.forEach(function (sec) {
@@ -120,8 +120,8 @@
 
     var tax = s.taxName || "Tax";
     html += '<table class="qp-totals">' +
-      (!fold.checked && c.margin ? tot("Items total", c.itemsTotal) + tot("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) +
-        (c.variations ? tot("Variations", c.variations) : "") : "") +
+      (!fold.checked && c.margin ? tot("Items total", c.itemsTotal) + (c.variations ? tot("Variations", c.variations) : "") +
+        tot("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) : "") +
       tot("Subtotal", c.subtotal) +
       tot(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +
       (c.delivery ? tot("Delivery", c.delivery) : "") +

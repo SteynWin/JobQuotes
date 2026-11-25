@@ -414,8 +414,9 @@
     $("summaryTable").innerHTML =
       row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Extras", "s_add") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
-      '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_margin"></td></tr>' +
       '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
+      '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %' +
+        '<div class="muted small-note" style="margin:0">on everything except Extras</div></td><td id="s_margin"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
       '<tr><td>Delivery <span class="muted">(after GST)</span></td><td id="s_deliv"></td></tr>' +
