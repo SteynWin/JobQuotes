@@ -32,7 +32,7 @@
     // so the client sees final prices and no separate margin line.
     var k = fold.checked ? 1 + Q.num(job.marginPct) / 100 : 1;
 
-    // Build sections: material categories, then Labour, Installation, Design, Supplied items (buy outs), Variations.
+    // Build sections: material categories, then Machining and workshop (labour + design), Installation, Supplied items, Variations.
     var cats = state.catalog.categories;
     var mats = (job.materials || []).filter(function (l) { return Q.num(l.qty) !== 0 && !l.pending; });
     mats.sort(function (a, b) {
@@ -54,14 +54,19 @@
       return { name: l.name, desc: l.description, qty: l.qty, unit: l.unit || "Hrs",
         unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k };
     };
-    var lab = (job.labour || []).filter(function (l) { return Q.num(l.qty) !== 0 && !Q.isInstallLine(l); });
-    if (lab.length) sections.push({ name: "Labour", rows: lab.map(labRow) });
+    // Labour (all types, incl. Cutters) and Design are shown to the client
+    // as one line: "Machining and workshop". Installation stays separate.
+    var fc = job.fixedCharges || {};
+    var workshop = 0;
+    (job.labour || []).forEach(function (l) {
+      if (!Q.isInstallLine(l)) workshop += Q.num(l.qty) * Q.num(l.price) * (1 + Q.num(l.markup) / 100);
+    });
+    if (fc.design && fc.design.included) workshop += Q.num(fc.design.amount);
+    if (Q.round2(workshop)) {
+      sections.push({ name: "Machining and workshop", rows: [{ name: "Design, machining, assembly and workshop labour", desc: "", qty: 1, unit: "", unitPrice: workshop * k }] });
+    }
     var inst = (job.labour || []).filter(function (l) { return Q.num(l.qty) !== 0 && Q.isInstallLine(l); });
     if (inst.length) sections.push({ name: "Installation", rows: inst.map(labRow) });
-    var fc = job.fixedCharges || {};
-    if (fc.design && fc.design.included && Q.num(fc.design.amount)) {
-      sections.push({ name: "Design", rows: [{ name: "Design", desc: "", qty: 1, unit: "", unitPrice: Q.num(fc.design.amount) * k }] });
-    }
     var adds = (job.addOns || []).filter(function (a) { return Q.num(a.amount) !== 0 && a.included !== false; });
     if (adds.length) {
       sections.push({ name: "Supplied items", rows: adds.map(function (a) {
