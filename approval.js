@@ -122,7 +122,7 @@
         '</td><td class="num ' + cls(varCharge - varCost) + '">' + Q.money(varCharge - varCost) + '</td><td class="num">' + pct(varCharge - varCost, varCharge) + '</td></tr>';
     }
     html += '<tr><td>Overheads &amp; margin (' + Q.num(job.marginPct) + '% of ' + Q.money(c.marginBase) +
-      ' – items and variations)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
+      ' – items incl. variations)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
       '</td><td class="num pos">' + Q.money(c.margin) + '</td><td></td></tr>';
     if (buyOuts) {
       html += '<tr><td>Supplied items (supplier markup, no overheads)</td><td class="num">' + Q.money(buyOuts.total.cost) + '</td><td class="num">' + Q.money(buyOuts.total.sell) +
@@ -142,8 +142,7 @@
     var tax = s.taxName || "GST";
     html += '<div class="appr-cols"><div>' +
       '<h2 class="appr-h">Quote totals (client)</h2><table class="qp-totals appr-totals">' +
-        tr("Items", c.itemsTotal) +
-        (c.variations ? tr("Variations", c.variations) : "") +
+        tr("Items (incl. variations)", c.itemsTotal) +
         tr("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) +
         (c.addOns ? tr("Supplied items", c.addOns) : "") +
         tr("Subtotal", c.subtotal, "strong") +

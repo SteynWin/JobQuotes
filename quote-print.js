@@ -120,7 +120,7 @@
 
     var tax = s.taxName || "Tax";
     html += '<table class="qp-totals">' +
-      (!fold.checked && c.margin ? tot("Items total", c.itemsTotal) + (c.variations ? tot("Variations", c.variations) : "") +
+      (!fold.checked && c.margin ? tot("Items total", c.itemsTotal) +
         tot("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) + (c.addOns ? tot("Supplied items", c.addOns) : "") : "") +
       tot("Subtotal", c.subtotal) +
       tot(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +

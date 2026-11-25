@@ -414,10 +414,10 @@
     var tax = state.catalog.settings.taxName || "Tax";
     $("summaryTable").innerHTML =
       row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") +
+      '<tr><td>Variations <span class="muted">(charged to client)</span></td><td id="s_var"></td></tr>' +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
-      '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %' +
-        '<div class="muted small-note" style="margin:0">on items and variations</div></td><td id="s_margin"></td></tr>' +
+        '<div class="muted small-note" style="margin:0">on the items total</div></td><td id="s_margin"></td></tr>' +
       '<tr class="sep"><td colspan="2"></td></tr>' +
       '<tr><td>Supplied items<div class="muted small-note" style="margin:0">incl. supplier markup, no overheads</div></td><td id="s_add"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
