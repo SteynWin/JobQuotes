@@ -346,13 +346,14 @@
   function renderAddOns() {
     var tbody = $("addBody");
     if (!job.addOns.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No extras.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No extras.</td></tr>';
       return;
     }
     tbody.innerHTML = job.addOns.map(function (a) {
       return '<tr data-row="' + Q.esc(a.id) + '">' +
         '<td>' + textInput("addOns", a, "name", "Description, e.g. supplied appliance") + '</td>' +
         '<td class="num col-money">' + moneyInput("addOns", a, "cost") + '</td>' +
+        '<td class="num col-pct">' + moneyInput("addOns", a, "markupPct") + '</td>' +
         '<td class="num col-money">' + moneyInput("addOns", a, "amount") + '</td>' +
         '<td class="col-del"><button type="button" class="icon-btn" data-del="addOns" data-id="' + Q.esc(a.id) + '" title="Remove">&times;</button></td>' +
         '</tr>';
@@ -488,7 +489,7 @@
     });
   });
 
-  var NUMERIC = { qty: 1, cost: 1, price: 1, markup: 1, amount: 1, charge: 1 };
+  var NUMERIC = { qty: 1, cost: 1, price: 1, markup: 1, amount: 1, charge: 1, markupPct: 1 };
   $("jobLayout").addEventListener("input", function (e) {
     var el = e.target;
     var pct = el.getAttribute("data-pct");
@@ -505,6 +506,22 @@
     }
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
     if (list === "materials" && f === "cost") line.price = line.cost;
+    // Extras: charge = cost + markup %. Changing cost or markup sets the
+    // charge; typing a charge works out the markup instead.
+    if (list === "addOns" && (f === "cost" || f === "markupPct" || f === "amount")) {
+      var row = el.closest("tr");
+      var setBox = function (field, v) {
+        var box = row && row.querySelector('[data-f="' + field + '"]');
+        if (box && box !== el) box.value = v;
+      };
+      if (f === "amount") {
+        line.markupPct = Q.num(line.cost) && line.amount !== "" ? Q.round2((Q.num(line.amount) / Q.num(line.cost) - 1) * 100) : "";
+        setBox("markupPct", line.markupPct);
+      } else if (line.markupPct !== "" && line.markupPct != null && line.cost !== "") {
+        line.amount = Q.round2(Q.num(line.cost) * (1 + Q.num(line.markupPct) / 100));
+        setBox("amount", line.amount);
+      }
+    }
     if (list === "materials" && f === "category") { rerender("materials"); changed(); return; }
     if (list === "materials" && f === "pick") { pickItem(line, el.value); return; }
     if ((list === "materials" || list === "labour") && f === "qty") {
