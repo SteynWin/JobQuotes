@@ -148,10 +148,10 @@
     list.innerHTML = '<table class="q-table"><tbody>' + catalog.categories.map(function (c, i) {
       return '<tr><td><input type="text" data-catname="' + i + '" value="' + Q.esc(c) + '"></td>' +
         '<td class="muted" style="width:80px">' + (counts[c] || 0) + ' items</td>' +
-        '<td style="width:120px;white-space:nowrap">' +
+        '<td style="width:1%;white-space:nowrap">' +
           '<button type="button" class="small-btn" data-catup="' + i + '"' + (i === 0 ? " disabled" : "") + ' title="Move up">&uarr;</button> ' +
           '<button type="button" class="small-btn" data-catdown="' + i + '"' + (i === catalog.categories.length - 1 ? " disabled" : "") + ' title="Move down">&darr;</button> ' +
-          '<button type="button" class="icon-btn" data-catdel="' + i + '" title="Delete category">&times;</button>' +
+          '<button type="button" class="small-btn delete-btn" data-catdel="' + i + '" title="Delete this category and its items">Delete</button>' +
         '</td></tr>';
     }).join("") + '</tbody></table>';
   }
