@@ -433,3 +433,7 @@ td.col-unit .roll-toggle:first-child { margin-left: 0; }
 .roll-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; white-space: nowrap; }
 .q-table td.col-unit { white-space: nowrap; }
 .appr-notes { margin: 0 0 16px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: #fffdf8; }
+.internal-card { border-left: 3px solid var(--danger); }
+.internal-card textarea { min-height: 70px; }
+.appr-internal { background: var(--danger-bg); border-color: #fecaca; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

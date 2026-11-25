@@ -102,7 +102,10 @@
       '<div class="qp-to"><strong>' + Q.esc(job.name || "(untitled job)") + '</strong>' +
         ([job.customer, job.address].filter(Boolean).length ? "\n" + Q.esc([job.customer, job.address].filter(Boolean).join(" · ")) : "") + '</div>';
 
-    // ---- Notes the client will see on the quote
+    // ---- Internal notes (office only) and the notes the client will see
+    if (job.internalNotes) {
+      html += '<div class="qp-notes appr-notes appr-internal"><h3>Internal notes</h3>' + Q.esc(job.internalNotes) + '</div>';
+    }
     if (job.notes) {
       html += '<div class="qp-notes appr-notes"><h3>Notes shown on the quote</h3>' + Q.esc(job.notes) + '</div>';
     }

@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "32";
+    var APP_VERSION = "33";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -30,7 +30,7 @@
 </script>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=28">
+<link rel="stylesheet" href="quotes.css?v=29">
 </head>
 <body>
 
@@ -94,6 +94,17 @@
         </div>
         <p class="hint" id="mzHint">Export the pricing report from Mozaik as CSV and choose it here. Materials and quantities are imported and matched to your Price List; prices and costs from Mozaik are ignored. You'll see a preview before anything changes.</p>
         <div id="mzPreview"></div>
+      </section>
+
+      <section class="card internal-card">
+        <div class="toolbar">
+          <h2 class="card-title">Internal notes</h2>
+          <span class="internal-tag">Office only – not on the quote</span>
+        </div>
+        <div class="q-field wide">
+          <label for="f_internalNotes" class="sr-only">Internal notes</label>
+          <textarea id="f_internalNotes" data-field="internalNotes" placeholder="Notes for the office: supplier details, lead times, things to check, pricing decisions…"></textarea>
+        </div>
       </section>
 
       <section class="card">
