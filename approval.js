@@ -102,6 +102,11 @@
       '<div class="qp-to"><strong>' + Q.esc(job.name || "(untitled job)") + '</strong>' +
         ([job.customer, job.address].filter(Boolean).length ? "\n" + Q.esc([job.customer, job.address].filter(Boolean).join(" · ")) : "") + '</div>';
 
+    // ---- Notes the client will see on the quote
+    if (job.notes) {
+      html += '<div class="qp-notes appr-notes"><h3>Notes shown on the quote</h3>' + Q.esc(job.notes) + '</div>';
+    }
+
     // ---- Key figures
     html += '<div class="appr-tiles">' +
       apTile("Quote total (incl. GST)", Q.money(c.total)) +
