@@ -18,6 +18,10 @@ The access code is **3622**. To change it, edit `ACCESS_CODE` in `access-gate.js
 
 - **Jobs**: every job with its status (Draft → Quoted → Accepted → In Progress
   → Completed / Lost), quote total, estimated cost and profit, and extra costs and variations.
+- **Import from Mozaik** (on each job): choose the pricing-report CSV exported from Mozaik. Materials,
+  descriptions and quantities are matched to the Price List (items not on it are added, at $0 unless
+  you tick "use Mozaik price"); Labor / Machining / Part Labor hours can fill the labour lines.
+  Mozaik's prices, add-ons and totals are ignored. A preview lets you check matches first.
 - **Job**: quantities of materials and hardware grouped by category, labour
   hours (Labour / Machining / Assembly / Installation, plus Cutters per job) and add-ons (Design,
   Delivery…). The summary works out items total → margin % → subtotal → GST →

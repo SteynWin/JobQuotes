@@ -700,6 +700,230 @@
     return j;
   }
 
+
+  // ------------------------------------------------------- Mozaik import
+  // Reads Mozaik's pricing-report CSV (Tax, Item, Description, QTY, Units,
+  // Amount, Markup, Total). Category rows are un-indented with no QTY;
+  // material rows are indented. Only names, descriptions, quantities and
+  // units are used - Mozaik's prices are ignored (unless the user ticks
+  // "use Mozaik price" for items new to the Price List). Labour rows
+  // (Labor / Machining / Part Labor) can fill the job's labour hours.
+  // Add-On rows and the totals are skipped: the app handles those itself.
+  var mz = null;   // the parsed import waiting in the preview
+
+  function normName(s) { return String(s || "").replace(/\s+/g, " ").trim().toLowerCase(); }
+  function mzNum(v) { return Q.num(String(v == null ? "" : v).replace(/[$,\s]/g, "")); }
+
+  function parseMozaik(text) {
+    var rows = Q.parseCSV(String(text).replace(/^﻿/, ""));
+    if (!rows.length) throw new Error("The file is empty.");
+    var head = rows[0].map(function (h) { return normName(h); });
+    var col = function (n) { return head.indexOf(n); };
+    var ci = { tax: col("tax"), item: col("item"), desc: col("description"), qty: col("qty"), unit: col("units"), amount: col("amount") };
+    if (ci.item === -1 || ci.qty === -1) throw new Error("This doesn't look like a Mozaik pricing CSV (no Item / QTY columns).");
+    var out = { items: [], labour: [], skipped: 0 };
+    var category = "Other";
+    rows.slice(1).forEach(function (r) {
+      var raw = r[ci.item] || "";
+      var name = raw.replace(/\s+/g, " ").trim();
+      if (!name) return;
+      if (ci.tax !== -1 && /^false$/i.test(String(r[ci.tax]).trim())) return;   // subtotal / total rows
+      var qtyRaw = String(r[ci.qty] || "").trim();
+      var unit = String(r[ci.unit] || "").trim();
+      var indented = /^\s/.test(raw);
+      if (/^add-on/i.test(name)) { out.skipped++; return; }
+      if (!indented && qtyRaw === "") { category = name; return; }        // category heading
+      var qty = mzNum(qtyRaw);
+      if (!indented) {
+        if (/^(hrs?|hours?)$/i.test(unit)) out.labour.push({ name: name, qty: qty });
+        else out.skipped++;                                                 // e.g. "# Legs" counts
+        return;
+      }
+      if (!qty) { out.skipped++; return; }                                  // 0 used
+      out.items.push({ category: category, name: name, description: String(r[ci.desc] || "").replace(/\s+/g, " ").trim(),
+        qty: qty, unit: unit || "#", amount: ci.amount === -1 ? 0 : mzNum(r[ci.amount]) });
+    });
+    return out;
+  }
+
+  // Best Price List match: same name in the same category, else same name anywhere.
+  function findPriceItem(it) {
+    var n = normName(it.name), items = state.catalog.items;
+    return items.find(function (x) { return normName(x.name) === n && x.category === it.category; }) ||
+      items.find(function (x) { return normName(x.name) === n; }) || null;
+  }
+  // Mozaik labour name -> one of our labour types (by id), or "" to skip.
+  function guessLabour(name) {
+    var rates = state.catalog.labourRates, n = normName(name);
+    var byKey = function (k) { var r = rates.find(function (x) { return Q.fixedLabourKey(x) === k; }); return r ? r.id : ""; };
+    var exact = rates.find(function (x) { return normName(x.name) === n || normName(x.name) === n.replace("labor", "labour"); });
+    if (exact) return exact.id;
+    if (/^labou?r$/.test(n)) return byKey("labour");
+    if (/^machin/.test(n)) return byKey("machining");
+    if (/^part/.test(n) || /^assembl/.test(n)) return byKey("assembly");
+    if (/^install/.test(n)) return byKey("installation");
+    return "";
+  }
+
+  function priceItemOptions(selectedId) {
+    var cat = state.catalog, groups = {}, order = cat.categories.slice();
+    cat.items.forEach(function (it) { (groups[it.category] = groups[it.category] || []).push(it); });
+    Object.keys(groups).forEach(function (g) { if (order.indexOf(g) === -1) order.push(g); });
+    return '<option value="__new"' + (!selectedId ? " selected" : "") + '>➕ Add to Price List as a new item</option>' +
+      order.filter(function (g) { return groups[g]; }).map(function (g) {
+        return '<optgroup label="' + Q.esc(g) + '">' + groups[g].map(function (x) {
+          return '<option value="' + Q.esc(x.id) + '"' + (x.id === selectedId ? " selected" : "") + '>' + Q.esc(x.name) + '</option>';
+        }).join("") + '</optgroup>';
+      }).join("");
+  }
+
+  function renderMozaikPreview() {
+    var box = $("mzPreview");
+    if (!mz) { box.innerHTML = ""; return; }
+    var newCount = mz.items.filter(function (r) { return r.use && !r.matchId; }).length;
+    var useCount = mz.items.filter(function (r) { return r.use; }).length;
+    var html = '<div class="mz-summary"><strong>' + Q.esc(mz.fileName) + '</strong>: ' + mz.items.length + ' material lines' +
+      (mz.labour.length ? ', ' + mz.labour.length + ' labour lines' : '') +
+      ' <span class="muted">(' + mz.skipped + ' add-on / zero-qty / total rows skipped)</span></div>' +
+      '<div class="table-scroll"><table class="q-table mz-table"><thead><tr>' +
+      '<th class="col-del"><input type="checkbox" id="mzAll"' + (useCount === mz.items.length ? " checked" : "") + ' title="Import all"></th>' +
+      '<th>Mozaik item</th><th>Description</th><th class="num col-qty">Qty</th><th class="col-unit">Unit</th><th>Price List item</th></tr></thead><tbody>';
+    var lastCat = null;
+    mz.items.forEach(function (r, i) {
+      if (r.category !== lastCat) {
+        lastCat = r.category;
+        html += '<tr class="cat-row"><td colspan="6">' + Q.esc(r.category) + '</td></tr>';
+      }
+      html += '<tr class="' + (r.use ? "" : "zero") + '">' +
+        '<td class="col-del"><input type="checkbox" data-mz-use="' + i + '"' + (r.use ? " checked" : "") + '></td>' +
+        '<td><strong>' + Q.esc(r.name) + '</strong></td>' +
+        '<td class="muted">' + Q.esc(r.description) + '</td>' +
+        '<td class="num col-qty">' + Q.esc(String(r.qty)) + '</td>' +
+        '<td class="col-unit">' + Q.esc(r.unit) + '</td>' +
+        '<td><select class="mz-match' + (r.matchId ? "" : " mz-new") + '" data-mz-match="' + i + '">' + priceItemOptions(r.matchId) + '</select>' +
+          (r.matchId ? ' <span class="mz-tag ok">on Price List</span>' : ' <span class="mz-tag new">new</span>') + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table></div>';
+    if (mz.labour.length) {
+      var rates = state.catalog.labourRates;
+      html += '<h3 class="mz-h">Labour hours</h3><div class="table-scroll"><table class="q-table mz-table"><thead><tr>' +
+        '<th>Mozaik labour</th><th class="num col-qty">Hours</th><th>Put the hours into</th></tr></thead><tbody>' +
+        mz.labour.map(function (l, i) {
+          return '<tr><td><strong>' + Q.esc(l.name) + '</strong></td><td class="num col-qty">' + Q.esc(String(l.qty)) + '</td>' +
+            '<td><select data-mz-lab="' + i + '"><option value="">Don\'t import</option>' +
+            rates.map(function (r) { return '<option value="' + Q.esc(r.id) + '"' + (r.id === l.rateId ? " selected" : "") + '>' + Q.esc(r.name) + ' (' + Q.money(r.rate) + '/' + Q.esc(r.unit || "Hrs") + ')</option>'; }).join("") +
+            '</select></td></tr>';
+        }).join("") + '</tbody></table></div>';
+    }
+    html += '<div class="mz-options">' +
+      '<label><input type="checkbox" id="mzUsePrice"' + (mz.usePrice ? " checked" : "") + '> Use Mozaik’s price for items new to the Price List (otherwise they’re added at $0 for you to price)</label>' +
+      '<label><input type="checkbox" id="mzReplace"' + (mz.replace ? " checked" : "") + '> Replace the quantity of items already on this job (otherwise add to it)</label>' +
+      '</div>' +
+      '<div class="mz-actions"><button type="button" class="ghost-btn" id="mzCancel">Cancel</button>' +
+      '<button type="button" class="primary-btn" id="mzGo"' + (useCount ? "" : " disabled") + '>Import ' + useCount + ' item' + (useCount === 1 ? "" : "s") +
+      (newCount ? ' (' + newCount + ' new to the Price List)' : '') + '</button></div>';
+    box.innerHTML = html;
+  }
+
+  $("mzPickBtn").addEventListener("click", function () { $("mzFile").value = ""; $("mzFile").click(); });
+  $("mzFile").addEventListener("change", function () {
+    var file = this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = parseMozaik(reader.result);
+        if (!parsed.items.length && !parsed.labour.length) throw new Error("No materials with a quantity were found in that file.");
+        parsed.items.forEach(function (r) { var m = findPriceItem(r); r.matchId = m ? m.id : null; r.use = true; });
+        parsed.labour.forEach(function (l) { l.rateId = guessLabour(l.name); });
+        parsed.fileName = file.name; parsed.usePrice = false; parsed.replace = true;
+        mz = parsed;
+        $("mzHint").classList.add("hidden");
+        renderMozaikPreview();
+      } catch (err) {
+        mz = null; renderMozaikPreview();
+        $("mzHint").classList.remove("hidden");
+        $("mzPreview").innerHTML = '<div class="form-errors">' + Q.esc(err.message) + '</div>';
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  $("mzPreview").addEventListener("change", function (e) {
+    if (!mz) return;
+    var t = e.target, i;
+    if (t.id === "mzAll") mz.items.forEach(function (r) { r.use = t.checked; });
+    else if ((i = t.getAttribute("data-mz-use")) !== null) mz.items[+i].use = t.checked;
+    else if ((i = t.getAttribute("data-mz-match")) !== null) mz.items[+i].matchId = t.value === "__new" ? null : t.value;
+    else if ((i = t.getAttribute("data-mz-lab")) !== null) { mz.labour[+i].rateId = t.value; return; }
+    else if (t.id === "mzUsePrice") { mz.usePrice = t.checked; return; }
+    else if (t.id === "mzReplace") { mz.replace = t.checked; return; }
+    else return;
+    renderMozaikPreview();
+  });
+
+  $("mzPreview").addEventListener("click", function (e) {
+    if (e.target.id === "mzCancel") { mz = null; renderMozaikPreview(); $("mzHint").classList.remove("hidden"); return; }
+    if (e.target.id !== "mzGo" || !mz) return;
+
+    // 1. Add the new items to the Price List (once per name + category).
+    var cat = Q.clone(state.catalog), added = 0, made = {};
+    mz.items.forEach(function (r) {
+      if (!r.use || r.matchId) return;
+      var key = r.category + "|" + normName(r.name);
+      if (made[key]) { r.matchId = made[key]; return; }
+      var price = mz.usePrice ? Q.round2(r.amount) : 0;
+      var it = { id: Q.uid(), category: r.category, name: r.name, description: r.description, unit: r.unit, cost: price, price: price };
+      if (cat.categories.indexOf(r.category) === -1) cat.categories.push(r.category);
+      cat.items.push(it);
+      made[key] = it.id; r.matchId = it.id; added++;
+    });
+    if (added) { cat.rev = Q.uid(); state.catalog = cat; QuoteStore.saveCatalog(cat); }
+
+    // 2. Put the quantities on the job.
+    var lines = 0;
+    mz.items.forEach(function (r) {
+      if (!r.use || !r.matchId) return;
+      var it = state.catalog.items.find(function (x) { return x.id === r.matchId; });
+      if (!it) return;
+      var line = job.materials.find(function (l) { return l.itemId === it.id; });
+      if (line) {
+        line.qty = Q.round2((mz.replace ? 0 : Q.num(line.qty)) + r.qty);
+      } else {
+        line = fromItem(it); line.qty = r.qty;
+        job.materials.push(line);
+      }
+      if (r.description && !line.note && normName(r.description) !== normName(it.description)) line.note = r.description;
+      lines++;
+    });
+
+    // 3. Labour hours.
+    var hrs = 0;
+    mz.labour.forEach(function (l) {
+      if (!l.rateId) return;
+      var rate = state.catalog.labourRates.find(function (x) { return x.id === l.rateId; });
+      if (!rate) return;
+      var line = job.labour.find(function (x) { return x.rateId === rate.id; });
+      if (!line) {
+        line = { id: Q.uid(), rateId: rate.id, name: rate.name, description: "", unit: rate.unit || "Hrs", qty: 0,
+          cost: Q.num(rate.cost), price: Q.num(rate.rate), markup: 0 };
+        job.labour.push(line);
+      }
+      line.qty = Q.round2((mz.replace ? 0 : Q.num(line.qty)) + l.qty);
+      hrs++;
+    });
+
+    var msg = "Imported " + lines + " material line" + (lines === 1 ? "" : "s") +
+      (hrs ? " and " + hrs + " labour line" + (hrs === 1 ? "" : "s") : "") +
+      (added ? ". " + added + " new item" + (added === 1 ? " was" : "s were") + " added to the Price List" +
+        (mz.usePrice ? "." : " at $0 – set their prices on the Price List.") : ".");
+    mz = null;
+    renderAll(); changed();
+    $("mzHint").classList.remove("hidden");
+    $("mzPreview").innerHTML = '<div class="form-errors form-success">' + Q.esc(msg) + '</div>';
+  });
+
   QuoteStore.init({
     onStatus: Q.setSyncStatus,
     onChange: function (s) {

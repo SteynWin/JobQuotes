@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "16";
+    var APP_VERSION = "17";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
@@ -30,7 +30,7 @@
 </script>
 <!-- Bump the ?v= numbers when the CSS/JS files change, so browsers fetch the new copies. -->
 <link rel="stylesheet" href="style.css?v=6">
-<link rel="stylesheet" href="quotes.css?v=24">
+<link rel="stylesheet" href="quotes.css?v=25">
 </head>
 <body>
 
@@ -86,12 +86,22 @@
         </div>
       </section>
 
+      <section class="card import-card no-print">
+        <div class="toolbar">
+          <h2 class="card-title">Import from Mozaik</h2>
+          <button type="button" class="small-btn" id="mzPickBtn">⬆ Choose Mozaik CSV…</button>
+          <input type="file" id="mzFile" accept=".csv,text/csv" class="hidden">
+        </div>
+        <p class="hint" id="mzHint">Export the pricing report from Mozaik as CSV and choose it here. Materials and quantities are imported and matched to your Price List; prices and costs from Mozaik are ignored. You'll see a preview before anything changes.</p>
+        <div id="mzPreview"></div>
+      </section>
+
       <section class="card">
         <div class="toolbar">
           <h2 class="card-title">Materials &amp; hardware</h2>
           <span class="section-total">Total <strong id="matTotal">$0.00</strong></span>
         </div>
-        <p class="hint">Enter quantities from your Mozaik report. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. Tap <strong>+ Add line</strong> and pick the item from the <strong>Item</strong> dropdown. For something not on the list, choose <strong>New item</strong>, type its name, cost and markup, and tap <strong>Save to list</strong> to keep it.</p>
+        <p class="hint">Import your Mozaik CSV above, or enter quantities by hand. Price List items use the Price List price, which can't be changed here; edit prices on the <a href="prices.html">Price List</a>. Tap <strong>+ Add line</strong> and pick the item from the <strong>Item</strong> dropdown. For something not on the list, choose <strong>New item</strong>, type its name, cost and markup, and tap <strong>Save to list</strong> to keep it.</p>
         <div class="table-scroll">
           <table class="q-table">
             <thead>
@@ -242,6 +252,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="common.js?v=23"></script>
-<script src="job.js?v=28"></script>
+<script src="job.js?v=29"></script>
 </body>
 </html>
