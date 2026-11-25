@@ -9,6 +9,33 @@
   var dirty = false;     // unsaved local edits pending
   var lastRev = null;    // rev of our last save, to ignore our own echo
   var firstRender = true;
+  var lastCatalogRev = null; // Price List / rates version last drawn
+
+  // Redraw without losing the user's place: remember which box had focus
+  // (and the cursor position), run the redraw, then focus it again.
+  function keepFocus(redraw) {
+    var el = document.activeElement, sel = null, start = null, end = null;
+    if (el && el !== document.body) {
+      if (el.getAttribute("data-id") && el.getAttribute("data-f")) {
+        sel = '[data-id="' + cssEsc(el.getAttribute("data-id")) + '"][data-f="' + el.getAttribute("data-f") + '"]';
+      } else if (el.getAttribute("data-pct")) {
+        sel = '[data-pct="' + el.getAttribute("data-pct") + '"]';
+      } else if (el.id) {
+        sel = "#" + cssEsc(el.id);
+      }
+      try { start = el.selectionStart; end = el.selectionEnd; } catch (e) { /* not a text box */ }
+    }
+    var y = window.scrollY;
+    redraw();
+    if (sel) {
+      var again = document.querySelector(sel);
+      if (again && again !== document.activeElement) {
+        again.focus({ preventScroll: true });
+        try { if (start != null) again.setSelectionRange(start, end); } catch (e) { /* number inputs */ }
+      }
+    }
+    window.scrollTo(0, y);
+  }
 
   var $ = function (id) { return document.getElementById(id); };
   var saveStateEl = $("saveState");
@@ -667,15 +694,24 @@
       }
       $("notFound").classList.add("hidden");
       $("jobLayout").classList.remove("hidden");
-      // Ignore the echo of our own save, and don't clobber unsaved typing.
+      // The echo of our own save (or a save while typing): never redraw the
+      // tables, or the box being typed in loses focus (then space scrolls
+      // the page). Only if the Price List / rates changed elsewhere do we
+      // redraw, and then the cursor is put back where it was.
+      var catRev = s.catalog.rev || null;
       if (job && (dirty || incoming.rev === lastRev)) {
-        renderPickers();
-        if (!dirty) { renderMaterials(); renderLabour(); renderInstall(); renderFixed(); renderAddOns(); updateNumbers(); }
+        if (!dirty && catRev !== lastCatalogRev) {
+          lastCatalogRev = catRev;
+          keepFocus(function () {
+            renderPickers(); renderMaterials(); renderLabour(); renderInstall(); renderFixed(); renderAddOns(); updateNumbers();
+          });
+        }
         return;
       }
+      lastCatalogRev = catRev;
       job = normaliseJob(Q.clone(incoming));
       dropEmptyAutoLabour();
-      renderAll();
+      if (firstRender) renderAll(); else keepFocus(renderAll);
       if (firstRender) {
         firstRender = false;
         saveStateEl.textContent = "Changes save automatically";
