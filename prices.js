@@ -67,7 +67,7 @@
       '<td class="col-actions">' +
         '<button type="button" class="small-btn save-btn" data-save="' + Q.esc(it.id) + '">Save</button>' +
         '<button type="button" class="small-btn" data-cancel="' + Q.esc(it.id) + '">Cancel</button>' +
-        (d.isNew ? "" : '<button type="button" class="icon-btn" data-delitem="' + Q.esc(it.id) + '" title="Delete item">&times;</button>') +
+        (d.isNew ? "" : '<button type="button" class="small-btn delete-btn" data-delitem="' + Q.esc(it.id) + '" title="Delete this item from the Price List">Delete</button>') +
       '</td></tr>';
   }
 
