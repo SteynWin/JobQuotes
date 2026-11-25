@@ -5,7 +5,7 @@
 
   var state = null, catalog = null, dirty = false, lastRev = null;
   var $ = function (id) { return document.getElementById(id); };
-  var NUMERIC = { marginPct: 1, taxPct: 1, depositPct: 1, validDays: 1, nextQuoteNumber: 1 };
+  var NUMERIC = { marginPct: 1, supplierMarkupPct: 1, taxPct: 1, depositPct: 1, validDays: 1, nextQuoteNumber: 1 };
 
   function doSave() {
     catalog.rev = Q.uid(); lastRev = catalog.rev; dirty = false;

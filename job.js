@@ -413,11 +413,13 @@
   function buildSummary() {
     var tax = state.catalog.settings.taxName || "Tax";
     $("summaryTable").innerHTML =
-      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") + row("Buy outs", "s_add") +
+      row("Materials", "s_mat") + row("Labour", "s_lab") + row("Installation", "s_inst") + row("Design", "s_design") +
       '<tr class="strong"><td>Items total</td><td id="s_items"></td></tr>' +
       '<tr><td>Variations (charged to client)</td><td id="s_var"></td></tr>' +
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %' +
-        '<div class="muted small-note" style="margin:0">on everything except Buy outs</div></td><td id="s_margin"></td></tr>' +
+        '<div class="muted small-note" style="margin:0">on items and variations</div></td><td id="s_margin"></td></tr>' +
+      '<tr class="sep"><td colspan="2"></td></tr>' +
+      '<tr><td>Supplied items (buy outs)<div class="muted small-note" style="margin:0">incl. supplier markup, no overheads</div></td><td id="s_add"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
       '<tr><td>Delivery <span class="muted">(after GST)</span></td><td id="s_deliv"></td></tr>' +
@@ -664,7 +666,8 @@
   });
 
   $("addAddBtn").addEventListener("click", function () {
-    var a = { id: Q.uid(), name: "", cost: "", amount: "" };
+    // New buy outs start at the supplier markup set in Settings.
+    var a = { id: Q.uid(), name: "", cost: "", markupPct: Q.num(state.catalog.settings.supplierMarkupPct), amount: "" };
     job.addOns.push(a);
     rerender("addOns"); changed();
     focusRow(a.id, "name");

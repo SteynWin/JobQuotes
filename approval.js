@@ -109,7 +109,8 @@
     html += '<h2 class="appr-h">Summary by section</h2>' +
       '<table class="qp-table appr-table"><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sell</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>';
     var tot = { cost: 0, sell: 0, profit: 0 };
-    sections.forEach(function (sec) {
+    var buyOuts = sections.filter(function (sec) { return sec.name === "Buy outs"; })[0];
+    sections.filter(function (sec) { return sec !== buyOuts; }).forEach(function (sec) {
       tot.cost += sec.total.cost; tot.sell += sec.total.sell; tot.profit += sec.total.profit;
       html += '<tr><td>' + Q.esc(sec.name) + '</td><td class="num">' + Q.money(sec.total.cost) + '</td><td class="num">' + Q.money(sec.total.sell) +
         '</td><td class="num ' + cls(sec.total.profit) + '">' + Q.money(sec.total.profit) + '</td><td class="num">' + pct(sec.total.profit, sec.total.sell) + '</td></tr>';
@@ -121,8 +122,12 @@
         '</td><td class="num ' + cls(varCharge - varCost) + '">' + Q.money(varCharge - varCost) + '</td><td class="num">' + pct(varCharge - varCost, varCharge) + '</td></tr>';
     }
     html += '<tr><td>Overheads &amp; margin (' + Q.num(job.marginPct) + '% of ' + Q.money(c.marginBase) +
-      ' – everything except Buy outs)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
+      ' – items and variations)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
       '</td><td class="num pos">' + Q.money(c.margin) + '</td><td></td></tr>';
+    if (buyOuts) {
+      html += '<tr><td>Supplied items / buy outs (supplier markup, no overheads)</td><td class="num">' + Q.money(buyOuts.total.cost) + '</td><td class="num">' + Q.money(buyOuts.total.sell) +
+        '</td><td class="num ' + cls(buyOuts.total.profit) + '">' + Q.money(buyOuts.total.profit) + '</td><td class="num">' + pct(buyOuts.total.profit, buyOuts.total.sell) + '</td></tr>';
+    }
     if (delivery) {
       html += '<tr><td>Delivery (after GST)</td><td class="num">' + Q.money(delivery.cost) + '</td><td class="num">' + Q.money(delivery.amount) +
         '</td><td class="num ' + cls(delivery.amount - delivery.cost) + '">' + Q.money(Q.num(delivery.amount) - Q.num(delivery.cost)) + '</td><td class="num">' +
@@ -139,7 +144,8 @@
       '<h2 class="appr-h">Quote totals (client)</h2><table class="qp-totals appr-totals">' +
         tr("Items", c.itemsTotal) +
         (c.variations ? tr("Variations", c.variations) : "") +
-        tr("Overheads & margin (" + Q.num(job.marginPct) + "%, excl. Buy outs)", c.margin) +
+        tr("Overheads & margin (" + Q.num(job.marginPct) + "%)", c.margin) +
+        (c.addOns ? tr("Supplied items", c.addOns) : "") +
         tr("Subtotal", c.subtotal, "strong") +
         tr(tax + " (" + Q.num(job.taxPct) + "%)", c.tax) +
         (c.delivery ? tr("Delivery (after " + tax + ")", c.delivery) : "") +

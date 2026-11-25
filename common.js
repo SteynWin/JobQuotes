@@ -80,6 +80,7 @@
         abn: "", phone: "", email: "", address: "",
         taxName: "GST", taxPct: 10,
         marginPct: 40,
+        supplierMarkupPct: 40,
         depositPct: 50,
         validDays: 30,
         quotePrefix: "Q-",
@@ -357,7 +358,9 @@
     var on = function (k) { return fc[k] && fc[k].included; };
     var design = on("design") ? num(fc.design.amount) : 0, designCost = on("design") ? num(fc.design.cost) : 0;
     var delivery = on("delivery") ? num(fc.delivery.amount) : 0, deliveryCost = on("delivery") ? num(fc.delivery.cost) : 0;
-    var itemsTotal = materials + labour + installation + design + addOns;
+    // Items = what the overheads apply to; supplied items (buy outs) are
+    // added after the overheads with their own supplier markup.
+    var itemsTotal = materials + labour + installation + design;
     // Variations: extra costs logged on the job. "amount" is what it costs
     // you; "charge" is what the client pays for it (0 = you absorb it).
     var actual = 0, variations = 0;
@@ -367,7 +370,7 @@
     // (their charge already includes their own markup).
     var marginBase = materials + labour + installation + design + variations;
     var margin = marginBase * num(job.marginPct) / 100;
-    var subtotal = itemsTotal + variations + margin;
+    var subtotal = itemsTotal + variations + margin + addOns;
     var tax = subtotal * num(job.taxPct) / 100;
     var total = subtotal + tax + delivery;   // delivery is after GST
     var deposit = total * num(job.depositPct) / 100;
