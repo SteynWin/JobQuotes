@@ -63,7 +63,7 @@
 
     var fc = job.fixedCharges || {};
     if (fc.design && fc.design.included) sec("Design", [lineRow("Design", "", 1, "", fc.design.cost, fc.design.amount)]);
-    sec("Buy outs", (job.addOns || []).filter(function (a) { return a.included !== false; }).map(function (a) {
+    sec("Supplied items", (job.addOns || []).filter(function (a) { return a.included !== false; }).map(function (a) {
       return lineRow(a.name || "Extra", "", 1, "", a.cost, a.amount);
     }));
     return sections;
@@ -109,7 +109,7 @@
     html += '<h2 class="appr-h">Summary by section</h2>' +
       '<table class="qp-table appr-table"><thead><tr><th>Section</th><th class="num">Cost</th><th class="num">Sell</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>';
     var tot = { cost: 0, sell: 0, profit: 0 };
-    var buyOuts = sections.filter(function (sec) { return sec.name === "Buy outs"; })[0];
+    var buyOuts = sections.filter(function (sec) { return sec.name === "Supplied items"; })[0];
     sections.filter(function (sec) { return sec !== buyOuts; }).forEach(function (sec) {
       tot.cost += sec.total.cost; tot.sell += sec.total.sell; tot.profit += sec.total.profit;
       html += '<tr><td>' + Q.esc(sec.name) + '</td><td class="num">' + Q.money(sec.total.cost) + '</td><td class="num">' + Q.money(sec.total.sell) +
@@ -125,7 +125,7 @@
       ' – items and variations)</td><td class="num">–</td><td class="num">' + Q.money(c.margin) +
       '</td><td class="num pos">' + Q.money(c.margin) + '</td><td></td></tr>';
     if (buyOuts) {
-      html += '<tr><td>Supplied items / buy outs (supplier markup, no overheads)</td><td class="num">' + Q.money(buyOuts.total.cost) + '</td><td class="num">' + Q.money(buyOuts.total.sell) +
+      html += '<tr><td>Supplied items (supplier markup, no overheads)</td><td class="num">' + Q.money(buyOuts.total.cost) + '</td><td class="num">' + Q.money(buyOuts.total.sell) +
         '</td><td class="num ' + cls(buyOuts.total.profit) + '">' + Q.money(buyOuts.total.profit) + '</td><td class="num">' + pct(buyOuts.total.profit, buyOuts.total.sell) + '</td></tr>';
     }
     if (delivery) {
@@ -193,7 +193,7 @@
         Q.money(delivery.amount) + '</td><td class="num">' + Q.money(dp) + '</td></tr>';
     }
     html += '</tbody></table>' +
-      '<p class="muted appr-note">Line sell prices are before the ' + Q.num(job.marginPct) + '% overheads &amp; margin, which is shown as its own line above. Buy outs carry no overheads.</p>';
+      '<p class="muted appr-note">Line sell prices are before the ' + Q.num(job.marginPct) + '% overheads &amp; margin, which is shown as its own line above. Supplied items carry no overheads.</p>';
 
     // ---- Approval
     var ap = job.approval || {};

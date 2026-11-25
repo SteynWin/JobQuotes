@@ -346,7 +346,7 @@
   function renderAddOns() {
     var tbody = $("addBody");
     if (!job.addOns.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No buy outs.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No supplied items.</td></tr>';
       return;
     }
     tbody.innerHTML = job.addOns.map(function (a) {
@@ -419,7 +419,7 @@
       '<tr><td>Overheads &amp; margin <input class="pct-input" data-pct="marginPct" type="number" step="0.1" inputmode="decimal"> %' +
         '<div class="muted small-note" style="margin:0">on items and variations</div></td><td id="s_margin"></td></tr>' +
       '<tr class="sep"><td colspan="2"></td></tr>' +
-      '<tr><td>Supplied items (buy outs)<div class="muted small-note" style="margin:0">incl. supplier markup, no overheads</div></td><td id="s_add"></td></tr>' +
+      '<tr><td>Supplied items<div class="muted small-note" style="margin:0">incl. supplier markup, no overheads</div></td><td id="s_add"></td></tr>' +
       '<tr class="strong"><td>Subtotal</td><td id="s_sub"></td></tr>' +
       '<tr><td>' + Q.esc(tax) + ' <input class="pct-input" data-pct="taxPct" type="number" step="0.1" inputmode="decimal"> %</td><td id="s_tax"></td></tr>' +
       '<tr><td>Delivery <span class="muted">(after GST)</span></td><td id="s_deliv"></td></tr>' +
@@ -510,7 +510,7 @@
     }
     line[f] = NUMERIC[f] ? (el.value === "" ? "" : Q.num(el.value)) : el.value;
     if (list === "materials" && f === "cost") line.price = line.cost;
-    // Buy outs and variations: charge = cost + markup %. Changing the cost
+    // Supplied items and variations: charge = cost + markup %. Changing the cost
     // or markup sets the charge; typing a charge works out the markup.
     var mk = list === "addOns" ? { cost: "cost", charge: "amount" } : list === "expenses" ? { cost: "amount", charge: "charge" } : null;
     if (mk && (f === mk.cost || f === "markupPct" || f === mk.charge)) {
@@ -666,7 +666,7 @@
   });
 
   $("addAddBtn").addEventListener("click", function () {
-    // New buy outs start at the supplier markup set in Settings.
+    // New supplied items start at the supplier markup set in Settings.
     var a = { id: Q.uid(), name: "", cost: "", markupPct: Q.num(state.catalog.settings.supplierMarkupPct), amount: "" };
     job.addOns.push(a);
     rerender("addOns"); changed();
