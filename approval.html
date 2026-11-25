@@ -11,7 +11,7 @@
      once with a fresh URL. Bump APP_VERSION here and in version.json on
      every release (bump-version.sh does both). */
   (function () {
-    var APP_VERSION = "27";
+    var APP_VERSION = "28";
     try {
       fetch("version.json?t=" + Date.now(), { cache: "no-store" })
         .then(function (r) { return r.json(); })
