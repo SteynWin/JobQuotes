@@ -44,8 +44,11 @@
     mats.forEach(function (l) {
       var key = l.category || "Other";
       if (!byCat[key]) { byCat[key] = { name: key, rows: [] }; sections.push(byCat[key]); }
-      byCat[key].rows.push({ name: l.name, desc: l.note || l.description, qty: l.qty, unit: l.unit,
-        unitPrice: Q.num(l.price) * (1 + Q.num(l.markup) / 100) * k });
+      var rl = Q.num(state.catalog.settings.rollLengthM) || 100;
+      var byRoll = l.byRoll && Q.isMetreUnit(l.unit);
+      byCat[key].rows.push({ name: l.name, desc: l.note || l.description,
+        qty: byRoll ? l.rolls : l.qty, unit: byRoll ? "Roll (" + rl + " m)" : l.unit,
+        unitPrice: Q.num(l.price) * (byRoll ? rl : 1) * (1 + Q.num(l.markup) / 100) * k });
     });
     var labRow = function (l) {
       return { name: l.name, desc: l.description, qty: l.qty, unit: l.unit || "Hrs",

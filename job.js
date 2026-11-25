@@ -147,6 +147,26 @@
       itemOptions(l.itemId, isNew) + '</select>';
   }
 
+  // Qty, unit and price cells for a Price List line. Lines sold by the metre
+  // (banding) get a "Rolls" tick box: ticked, the qty is whole rolls and
+  // the price is per roll; the measured metres are shown underneath.
+  function rollLen() { return Q.num(state.catalog.settings.rollLengthM) || 100; }
+  function qtyCells(l) {
+    var metre = Q.isMetreUnit(l.unit);
+    if (metre && l.byRoll) {
+      return '<td class="num col-qty">' +
+          '<input type="number" step="1" min="0" inputmode="numeric" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="rolls" value="' + Q.esc(l.rolls) + '">' +
+          '<div class="roll-meta">' + Q.esc(String(Q.round2(Q.num(l.meters)))) + ' m</div></td>' +
+        '<td class="col-unit"><label class="roll-toggle"><input type="checkbox" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="byRoll" checked> Rolls</label>' +
+          '<div class="roll-meta">' + rollLen() + ' m each</div></td>' +
+        '<td class="num col-money">' + Q.money(Q.num(l.price) * rollLen()) + '<div class="roll-meta">per roll</div></td>';
+    }
+    return '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
+      '<td class="col-unit">' + Q.esc(l.unit) +
+        (metre ? '<label class="roll-toggle" title="Order in whole ' + rollLen() + ' m rolls"><input type="checkbox" data-list="materials" data-id="' + Q.esc(l.id) + '" data-f="byRoll"> Rolls</label>' : "") + '</td>' +
+      '<td class="num col-money">' + Q.money(l.price) + '</td>';
+  }
+
   function categoryOptions(selected) {
     var cats = state.catalog.categories.slice();
     if (selected && cats.indexOf(selected) === -1) cats.push(selected);
@@ -185,9 +205,7 @@
         html += '<tr data-row="' + Q.esc(l.id) + '"' + (Q.num(l.qty) ? "" : ' class="zero"') + '>' +
           '<td>' + itemSelect(l, false) + '</td>' +
           '<td>' + textInput("materials", l, "note", l.description || "Extra info (optional)") + '</td>' +
-          '<td class="num col-qty">' + moneyInput("materials", l, "qty") + '</td>' +
-          '<td class="col-unit">' + Q.esc(l.unit) + '</td>' +
-          '<td class="num col-money">' + Q.money(l.price) + '</td>' +
+          qtyCells(l) +
           '<td class="num col-total" data-linetotal="' + Q.esc(l.id) + '"></td>' +
           '<td class="col-del">' + del + '</td>' +
           '</tr>';
@@ -503,6 +521,28 @@
     var line = job[list].find(function (l) { return l.id === el.getAttribute("data-id"); });
     if (!line) return;
     var f = el.getAttribute("data-f");
+    if (list === "materials" && f === "byRoll") {
+      if (el.checked) {
+        line.meters = Q.num(line.qty);
+        line.rolls = Q.rollsFor(line.meters, rollLen());
+        line.qty = line.rolls * rollLen();
+        line.byRoll = true;
+      } else {
+        line.qty = line.meters != null ? Q.num(line.meters) : Q.num(line.qty);
+        line.byRoll = false;
+        delete line.rolls; delete line.meters;
+      }
+      rerender("materials"); changed();
+      return;
+    }
+    if (list === "materials" && f === "rolls") {
+      line.rolls = el.value === "" ? "" : Math.max(0, Math.round(Q.num(el.value)));
+      line.qty = Q.num(line.rolls) * rollLen();
+      var trR = el.closest("tr");
+      if (trR) trR.classList.toggle("zero", !Q.num(line.qty));
+      updateNumbers(); changed();
+      return;
+    }
     if (el.type === "checkbox") {
       line[f] = el.checked;
       rerender(list); changed();
@@ -895,7 +935,13 @@
       if (!it) return;
       var line = job.materials.find(function (l) { return l.itemId === it.id; });
       if (line) {
-        line.qty = Q.round2((mz.replace ? 0 : Q.num(line.qty)) + r.qty);
+        if (line.byRoll) {
+          line.meters = Q.round2((mz.replace ? 0 : Q.num(line.meters)) + r.qty);
+          line.rolls = Q.rollsFor(line.meters, rollLen());
+          line.qty = line.rolls * rollLen();
+        } else {
+          line.qty = Q.round2((mz.replace ? 0 : Q.num(line.qty)) + r.qty);
+        }
       } else {
         line = fromItem(it); line.qty = r.qty;
         job.materials.push(line);

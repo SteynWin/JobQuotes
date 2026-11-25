@@ -81,6 +81,7 @@
         taxName: "GST", taxPct: 10,
         marginPct: 40,
         supplierMarkupPct: 40,
+        rollLengthM: 100,
         depositPct: 50,
         validDays: 30,
         quotePrefix: "Q-",
@@ -389,6 +390,13 @@
     };
   }
 
+  // Banding (anything sold by the metre) can be ordered in whole rolls.
+  // A line "by roll" keeps the measured metres in .meters and the roll
+  // count in .rolls; .qty is rolls x roll length, so the per-metre price
+  // still gives the right total.
+  function isMetreUnit(unit) { return /^(m|mtr|metres?|meters?|lm)$/i.test(String(unit || "").trim()); }
+  function rollsFor(meters, rollLen) { return Math.max(1, Math.ceil(num(meters) / (num(rollLen) || 100) - 1e-9)); }
+
   function newJob(catalog) {
     var s = catalog.settings;
     var n = num(s.nextQuoteNumber) || 1;
@@ -520,6 +528,7 @@
     STATUSES: STATUSES, calcJob: calcJob, lineSell: lineSell, lineCost: lineCost,
     newJob: newJob, defaultCatalog: defaultCatalog, normaliseCatalog: normaliseCatalog,
     fixedLabourKey: fixedLabourKey, isInstallLine: isInstallLine,
+    isMetreUnit: isMetreUnit, rollsFor: rollsFor,
     FIXED_CHARGES: FIXED_CHARGES, fixedChargeKey: fixedChargeKey,
     renderChrome: renderChrome, setSyncStatus: setSyncStatus, debounce: debounce,
     downloadFile: downloadFile, toCSV: toCSV, parseCSV: parseCSV, clone: clone

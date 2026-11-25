@@ -50,6 +50,11 @@
     });
     order.forEach(function (k) {
       sec(k, byCat[k].map(function (l) {
+        var rl = Q.num(state.catalog.settings.rollLengthM) || 100;
+        if (l.byRoll && Q.isMetreUnit(l.unit)) {
+          return lineRow(l.name, (l.note || l.description || "") + " (" + Q.round2(Q.num(l.meters)) + " m measured)", l.rolls, "Roll",
+            Q.num(l.cost) * rl, Q.num(l.price) * rl * (1 + Q.num(l.markup) / 100));
+        }
         return lineRow(l.name, l.note || l.description, l.qty, l.unit, l.cost,
           Q.num(l.price) * (1 + Q.num(l.markup) / 100));
       }));
